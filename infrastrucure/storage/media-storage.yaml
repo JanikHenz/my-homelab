@@ -1,0 +1,75 @@
+# JELLYFIN STORAGE
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jellyfin-config-pv
+spec:
+  storageClassName: local-path
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/jellyfin/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-config-pvc
+  namespace: media
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: jellyfin-config-pv
+---
+# PLEX STORAGE
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: plex-config-pv
+spec:
+  storageClassName: local-path
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/plex/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config-pvc
+  namespace: media
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: plex-config-pv
+---
+# SHARED MEDIA (Global)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: global-media-pv
+spec:
+  storageClassName: local-path
+  capacity: { storage: 500Gi }
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/media" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-media-pvc
+  namespace: media
+spec:
+  accessModes: ["ReadOnlyMany"]
+  resources: { requests: { storage: 500Gi } }
+  volumeName: global-media-pv
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-media-pvc
+  namespace: media
+spec:
+  accessModes: ["ReadWriteMany"]
+  resources: { requests: { storage: 500Gi } }
+  volumeName: global-media-pv

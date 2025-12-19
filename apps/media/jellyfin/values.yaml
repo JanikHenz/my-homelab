@@ -1,0 +1,29 @@
+image:
+  repository: jellyfin/jellyfin
+  tag: latest
+
+nodeSelector:
+  kubernetes.io/hostname: homeserver
+
+runtimeClassName: nvidia
+
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    existingClaim: jellyfin-config-pvc
+  media:
+    enabled: true
+    type: pvc
+    existingClaim: jellyfin-media-pvc
+    mountPath: /data
+    readOnly: true
+
+service:
+  type: NodePort
+  port: 8096
+  nodePort: 30008
