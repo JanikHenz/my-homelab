@@ -1,3 +1,5 @@
+fullnameOverride: "plex"
+
 image:
   repository: plexinc/pms-docker
   tag: 1.31.1.6733-bc0674160
@@ -13,21 +15,24 @@ resources:
 
 env:
   TZ: "Europe/Berlin"
-  PLEX_CLAIM: "claim-kgezMxrDMegAiYDiz7Kx"
+  PLEX_CLAIM: "claim-g6yxykuE66pXeorSPatt"
 
 persistence:
   config:
     enabled: true
-    existingClaim: plex-config-pvc # Nutzt dein 10Gi Volume
-  extraAppVolumeMounts:
-    - name: plex-media
-      mountPath: /data
-  extraVolumes:
-    - name: plex-media
-      persistentVolumeClaim:
-        claimName: plex-media-pvc # Nutzt dein 500Gi Volume
+    existingClaim: plex-config-pvc
+
+# Diese beiden Blöcke müssen auf der gleichen Ebene wie 'persistence' stehen!
+extraAppVolumeMounts:
+  - name: plex-media
+    mountPath: /data
+
+extraVolumes:
+  - name: plex-media
+    persistentVolumeClaim:
+      claimName: plex-media-pvc
 
 service:
   type: NodePort
-  externalPort: 32400
+  port: 32400
   nodePort: 30009

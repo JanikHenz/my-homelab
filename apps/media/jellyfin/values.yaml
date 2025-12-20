@@ -1,3 +1,5 @@
+fullnameOverride: "jellyfin"
+
 image:
   repository: jellyfin/jellyfin
   tag: 10.11
