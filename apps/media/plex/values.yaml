@@ -30,7 +30,7 @@ extraAppVolumeMounts:
 extraVolumes:
   - name: plex-media
     persistentVolumeClaim:
-      claimName: plex-media-pvc
+      claimName: global-media-pv 
 
 service:
   type: NodePort

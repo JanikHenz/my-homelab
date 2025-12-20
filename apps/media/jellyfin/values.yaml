@@ -21,7 +21,7 @@ persistence:
   media:
     enabled: true
     type: pvc
-    existingClaim: jellyfin-media-pvc
+    existingClaim: global-media-pv 
     mountPath: /data
     readOnly: true
 
