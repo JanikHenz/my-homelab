@@ -17,7 +17,7 @@ env:
 
 persistence:
   config:
-    claimName: plex-config-pvc
+    claimName: existingClaim 
   extraAppVolumeMounts:
     - name: plex-media
       mountPath: /data
@@ -25,7 +25,7 @@ persistence:
   extraVolumes:
     - name: plex-media
       persistentVolumeClaim:
-        claimName: plex-media-pvc
+        claimName: existingClaim 
 
 service:
   type: NodePort
