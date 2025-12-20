@@ -17,15 +17,15 @@ env:
 
 persistence:
   config:
-    claimName: existingClaim 
+    enabled: true
+    existingClaim: plex-config-pvc # Nutzt dein 10Gi Volume
   extraAppVolumeMounts:
     - name: plex-media
       mountPath: /data
-      subPath: ""
   extraVolumes:
     - name: plex-media
       persistentVolumeClaim:
-        claimName: existingClaim 
+        claimName: plex-media-pvc # Nutzt dein 500Gi Volume
 
 service:
   type: NodePort
