@@ -21,7 +21,7 @@ persistence:
   media:
     enabled: true
     type: pvc
-    existingClaim: global-media-pv 
+    existingClaim: global-media-pvc
     mountPath: /data
     readOnly: true
 
