@@ -1,6 +1,6 @@
 image:
   repository: jellyfin/jellyfin
-  tag: latest
+  tag: 10.11
 
 nodeSelector:
   kubernetes.io/hostname: homeserver

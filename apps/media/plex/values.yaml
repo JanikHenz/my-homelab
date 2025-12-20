@@ -1,6 +1,6 @@
 image:
   repository: plexinc/pms-docker
-  tag: latest
+  tag: 1.31.1.6733-bc0674160
 
 nodeSelector:
   kubernetes.io/hostname: homeserver
