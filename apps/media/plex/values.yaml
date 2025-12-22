@@ -9,18 +9,28 @@ nodeSelector:
 
 runtimeClassName: nvidia
 
+# GPU Ressourcen müssen direkt hier stehen
+resources:
+  limits:
+    nvidia.com/gpu: 1
+
 env:
   TZ: "Europe/Berlin"
-  PLEX_CLAIM: "claim-WkmSx1CzJGQJ3YxNQ3M_"
+  PLEX_CLAIM: "claim-p33Sj94SJ5obxFt3u5rL"
 
 persistence:
   config:
     enabled: true
     existingClaim: "plex-config-pvc"
-  
-  media:
-    enabled: true
-    existingClaim: "global-media-pvc"
+
+# Das Chart v1.4.0 erwartet diese exakten Keys für zusätzliche Mounts:
+extraVolumes:
+  - name: plex-media
+    persistentVolumeClaim:
+      claimName: "global-media-pvc"
+
+extraVolumeMounts:
+  - name: plex-media
     mountPath: /data
 
 service:
