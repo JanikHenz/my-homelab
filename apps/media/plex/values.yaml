@@ -9,28 +9,19 @@ nodeSelector:
 
 runtimeClassName: nvidia
 
-resources:
-  limits:
-    nvidia.com/gpu: 1
-
 env:
   TZ: "Europe/Berlin"
-  PLEX_CLAIM: "claim-g6yxykuE66pXeorSPatt"
+  PLEX_CLAIM: "claim-WkmSx1CzJGQJ3YxNQ3M_"
 
 persistence:
   config:
     enabled: true
-    existingClaim: plex-config-pvc
-
-# Diese beiden Blöcke müssen auf der gleichen Ebene wie 'persistence' stehen!
-extraAppVolumeMounts:
-  - name: plex-media
+    existingClaim: "plex-config-pvc"
+  
+  media:
+    enabled: true
+    existingClaim: "global-media-pvc"
     mountPath: /data
-
-extraVolumes:
-  - name: plex-media
-    persistentVolumeClaim:
-      claimName: global-media-pvc
 
 service:
   type: NodePort
