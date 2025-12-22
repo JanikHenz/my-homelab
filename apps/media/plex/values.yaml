@@ -9,7 +9,6 @@ nodeSelector:
 
 runtimeClassName: nvidia
 
-# WICHTIG: Hier müssen die GPU-Limits stehen
 resources:
   limits:
     nvidia.com/gpu: 1
@@ -18,20 +17,20 @@ resources:
 
 env:
   TZ: "Europe/Berlin"
-  PLEX_CLAIM: "claim-GLVrC9h3UMacZ5P_kz6R"
+  PLEX_CLAIM: "claim-zs5tePxxwJsHNpzgco9s"
 
 persistence:
   config:
     enabled: true
-    existingClaim: "plex-config-pvc" 
-  
-  extraVolumes:
-    - name: plex-media
-      persistentVolumeClaim:
-        claimName: "global-media-pvc"
-  extraVolumeMounts:
+    existingClaim: "plex-config-pvc"
+  extraAppVolumeMounts:
     - name: plex-media
       mountPath: /data
+
+extraVolumes:
+  - name: plex-media
+    persistentVolumeClaim:
+      claimName: "global-media-pvc"
 
 service:
   type: NodePort
