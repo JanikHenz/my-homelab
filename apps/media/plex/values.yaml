@@ -17,7 +17,7 @@ resources:
 
 env:
   TZ: "Europe/Berlin"
-  PLEX_CLAIM: "claim-zs5tePxxwJsHNpzgco9s"
+  PLEX_CLAIM: "claim-91VDsnBwaMUSp4S-Mx7y"
 
 persistence:
   config:
