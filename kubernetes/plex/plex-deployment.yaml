@@ -16,6 +16,10 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homelab
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       runtimeClassName: nvidia
       containers:
         - name: plex
