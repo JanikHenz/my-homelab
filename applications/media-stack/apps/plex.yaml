@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: jellyseerr
+  name: plex
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: kubernetes/jellyseerr
+    path: applications/media-stack/manifests/plex
   destination:
     name: homelab
     namespace: media

@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: qbittorrent
+  name: radarr
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: kubernetes/qbittorrent
+    path: applications/media-stack/manifests/radarr
   destination:
     name: homelab
     namespace: media
