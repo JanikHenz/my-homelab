@@ -14,6 +14,8 @@ spec:
       labels:
         app: radarr
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: homelab
       containers:
       - name: radarr
         image: linuxserver/radarr:latest
@@ -26,6 +28,13 @@ spec:
           value: "Europe/Zurich"
         ports:
         - containerPort: 7878
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
         volumeMounts:
         - name: config
           mountPath: /config

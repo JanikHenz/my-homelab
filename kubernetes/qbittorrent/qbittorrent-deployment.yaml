@@ -14,43 +14,45 @@ spec:
       labels:
         app: qbittorrent
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: homelab
       containers:
-      - name: qbittorrent
-        image: linuxserver/qbittorrent:latest
-        env:
-        - name: PUID
-          value: "1000"
-        - name: PGID
-          value: "1000"
-        - name: TZ
-          value: "Europe/Zurich"
-        - name: WEBUI_PORT
-          value: "8080"
-        ports:
-        - containerPort: 8080
-          name: webui
-        - containerPort: 6881
-          name: torrent-tcp
-          protocol: TCP
-        - containerPort: 6881
-          name: torrent-udp
-          protocol: UDP
-        volumeMounts:
-        - name: config
-          mountPath: /config
-        - name: downloads
-          mountPath: /downloads
-        resources:
-          requests:
-            cpu: 200m
-            memory: 512Mi
-          limits:
-            cpu: 1000m
-            memory: 1Gi
+        - name: qbittorrent
+          image: linuxserver/qbittorrent:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Zurich"
+            - name: WEBUI_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+              name: webui
+            - containerPort: 6881
+              name: torrent-tcp
+              protocol: TCP
+            - containerPort: 6881
+              name: torrent-udp
+              protocol: UDP
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
       volumes:
-      - name: config
-        persistentVolumeClaim:
-          claimName: qbittorrent-config-pvc
-      - name: downloads
-        persistentVolumeClaim:
-          claimName: downloads-pvc
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent-config-pvc
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: downloads-pvc

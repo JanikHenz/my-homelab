@@ -1,0 +1,28 @@
+# --- DOWNLOADS STORAGE (GEMEINSAM) ---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: downloads-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/downloads"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: downloads-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 500Gi
+  volumeName: downloads-pv

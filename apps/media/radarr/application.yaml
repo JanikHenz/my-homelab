@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/JanikHenz/my-homelab.git'
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
     path: kubernetes/radarr
   destination:

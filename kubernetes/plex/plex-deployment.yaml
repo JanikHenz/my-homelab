@@ -14,6 +14,8 @@ spec:
       labels:
         app: plex
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: homelab
       runtimeClassName: nvidia
       containers:
         - name: plex
@@ -21,7 +23,12 @@ spec:
           ports:
             - containerPort: 32400
           resources:
+            requests:
+              cpu: 500m
+              memory: 2Gi
             limits:
+              cpu: 3000m
+              memory: 6Gi
               nvidia.com/gpu: 1
           env:
             - name: PLEX_CLAIM
