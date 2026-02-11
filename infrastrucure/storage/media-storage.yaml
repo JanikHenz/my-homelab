@@ -92,6 +92,7 @@ spec:
   resources: { requests: { storage: 1Gi } }
   volumeName: sonarr-config-pv
 
+
 # --- SHARED MEDIA STORAGE (GEMEINSAM) ---
 
 ---
