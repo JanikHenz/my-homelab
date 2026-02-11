@@ -45,6 +45,52 @@ spec:
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 10Gi } }
   volumeName: plex-config-pv
+---
+# RADARR CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: radarr-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 1Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/radarr/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-config-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 1Gi } }
+  volumeName: radarr-config-pv
+---
+# SONARR CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 1Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/sonarr/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-config-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 1Gi } }
+  volumeName: sonarr-config-pv
 
 # --- SHARED MEDIA STORAGE (GEMEINSAM) ---
 
