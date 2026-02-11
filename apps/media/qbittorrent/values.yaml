@@ -1,0 +1,36 @@
+fullnameOverride: "qbittorrent"
+
+image:
+  repository: linuxserver/qbittorrent
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30012
+
+env:
+  TZ: "Europe/Berlin"
+  PUID: 1000
+  PGID: 1000
+  WEBUI_PORT: 8080
+
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    existingClaim: qbittorrent-config-pvc
+  media:
+    enabled: true
+    type: pvc
+    existingClaim: global-media-pvc
+    mountPath: /data
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi

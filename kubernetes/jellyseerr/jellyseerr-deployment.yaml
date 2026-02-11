@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jellyseerr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jellyseerr
+  template:
+    metadata:
+      labels:
+        app: jellyseerr
+    spec:
+      containers:
+        - name: jellyseerr
+          image: ghcr.io/fallenbagel/jellyseerr:latest
+          ports:
+            - containerPort: 5055
+          env:
+            - name: TZ
+              value: "Europe/Zurich"
+            - name: JELLYFIN_SERVER
+              value: "http://jellyfin-service:8096" # Hier ist dein Wissen von eben!
+          volumeMounts:
+            - name: config-storage
+              mountPath: /app/config
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+      volumes:
+        - name: config-storage
+          persistentVolumeClaim:
+            claimName: jellyseerr-config-pvc

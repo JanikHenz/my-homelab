@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: jellyseerr
+  name: sonarr
   namespace: argocd
 spec:
   project: default
   sources:
     - repoURL: 'https://k8s-at-home.com/charts/'
-      chart: jellyseerr
-      targetRevision: 6.4.2
+      chart: sonarr
+      targetRevision: 16.3.2
       helm:
         valueFiles:
-          - $values/apps/media/jellyseerr/values.yaml 
+          - $values/apps/media/sonarr/values.yaml 
     - repoURL: 'https://github.com/JanikHenz/my-homelab.git'
       targetRevision: HEAD
       ref: values

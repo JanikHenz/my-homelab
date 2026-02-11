@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      containers:
+      - name: radarr
+        image: linuxserver/radarr:latest
+        env:
+        - name: PUID
+          value: "1000" # Standard User ID (meistens sicherer als Root)
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "Europe/Zurich"
+        ports:
+        - containerPort: 7878
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: media
+          mountPath: /movies
+        - name: downloads
+          mountPath: /downloads
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: radarr-config-pvc
+      - name: media
+        persistentVolumeClaim:
+          claimName: plex-media-pvc # WICHTIG: Wir nehmen Plex, weil der RWX (Schreibrechte) hat!
+      - name: downloads
+        persistentVolumeClaim:
+          claimName: downloads-pvc

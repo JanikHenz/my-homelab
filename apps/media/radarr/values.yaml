@@ -1,0 +1,35 @@
+fullnameOverride: "radarr"
+
+image:
+  repository: linuxserver/radarr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 7878
+  nodePort: 30010
+
+env:
+  TZ: "Europe/Berlin"
+  PUID: 1000
+  PGID: 1000
+
+persistence:
+  config:
+    enabled: true
+    type: pvc
+    existingClaim: radarr-config-pvc
+  media:
+    enabled: true
+    type: pvc
+    existingClaim: global-media-pvc
+    mountPath: /data
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
