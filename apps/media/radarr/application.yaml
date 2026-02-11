@@ -5,16 +5,10 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  sources:
-    - repoURL: 'https://k8s-at-home.com/charts/'
-      chart: radarr
-      targetRevision: 16.3.2
-      helm:
-        valueFiles:
-          - $values/apps/media/radarr/values.yaml 
-    - repoURL: 'https://github.com/JanikHenz/my-homelab.git'
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: 'https://github.com/JanikHenz/my-homelab.git'
+    targetRevision: HEAD
+    path: kubernetes/radarr
   destination:
     name: homelab
     namespace: media

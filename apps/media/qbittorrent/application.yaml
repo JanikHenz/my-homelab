@@ -5,16 +5,10 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  sources:
-    - repoURL: 'https://k8s-at-home.com/charts/'
-      chart: qbittorrent
-      targetRevision: 13.5.2
-      helm:
-        valueFiles:
-          - $values/apps/media/qbittorrent/values.yaml 
-    - repoURL: 'https://github.com/JanikHenz/my-homelab.git'
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: 'https://github.com/JanikHenz/my-homelab.git'
+    targetRevision: HEAD
+    path: kubernetes/qbittorrent
   destination:
     name: homelab
     namespace: media
