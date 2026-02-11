@@ -49,7 +49,7 @@ spec:
           claimName: sonarr-config-pvc
       - name: media
         persistentVolumeClaim:
-          claimName: plex-media-pvc # Auch hier Plex für Schreibrechte nutzen
+          claimName: global-media-pvc
       - name: downloads
         persistentVolumeClaim:
           claimName: downloads-pvc
