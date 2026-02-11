@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: media
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homelab
+      containers:
+        - name: radarr
+          image: linuxserver/radarr:latest
+          env:
+            - name: PUID
+              value: "1000" # Standard User ID (meistens sicherer als Root)
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Zurich"
+          ports:
+            - containerPort: 7878
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: media
+              mountPath: /movies
+            - name: downloads
+              mountPath: /downloads
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: radarr-config-pvc
+        - name: media
+          persistentVolumeClaim:
+            claimName: plex-media-pvc # WICHTIG: Wir nehmen Plex, weil der RWX (Schreibrechte) hat!
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: downloads-pvc

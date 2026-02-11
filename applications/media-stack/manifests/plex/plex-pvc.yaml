@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: plex-config-pvc
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteOnce
   resources:
@@ -16,6 +17,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: plex-media-pvc
 spec:
+  storageClassName: ""
   accessModes:
     - ReadWriteMany
   resources:

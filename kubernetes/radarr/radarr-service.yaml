@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr-service
+  namespace: media
+spec:
+  type: NodePort # Damit du auch ohne Ingress draufkommst (optional)
+  selector:
+    app: radarr
+  ports:
+    - port: 7878
+      targetPort: 7878
+      nodePort: 30078 # Fester Port für Browser-Zugriff
