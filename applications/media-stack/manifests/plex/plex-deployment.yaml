@@ -36,7 +36,12 @@ spec:
               nvidia.com/gpu: 1
           env:
             - name: PLEX_CLAIM
-              value: "claim-kgezMxrDMegAiYDiz7Kx"
+              valueFrom:
+                secretKeyRef:
+                  name: plex-claim
+                  key: token
+            - name: TZ
+              value: "Europe/Berlin"
           volumeMounts:
             - name: plex-config
               mountPath: /config
