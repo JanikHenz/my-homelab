@@ -15,7 +15,7 @@ spec:
         app: jellyfin
     spec:
       nodeSelector:
-        kubernetes.io/hostname: homelab
+        kubernetes.io/hostname: homeserver
       tolerations:
         - key: nvidia.com/gpu
           operator: Exists

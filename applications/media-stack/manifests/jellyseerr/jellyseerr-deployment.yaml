@@ -14,7 +14,7 @@ spec:
         app: jellyseerr
     spec:
       nodeSelector:
-        kubernetes.io/hostname: homelab
+        kubernetes.io/hostname: homeserver
       containers:
         - name: jellyseerr
           image: ghcr.io/fallenbagel/jellyseerr:latest

@@ -16,7 +16,7 @@ spec:
         app: radarr
     spec:
       nodeSelector:
-        kubernetes.io/hostname: homelab
+        kubernetes.io/hostname: homeserver
       containers:
       - name: radarr
         image: linuxserver/radarr:latest
