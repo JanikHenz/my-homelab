@@ -9,11 +9,8 @@ spec:
     repoURL: https://github.com/janikhenz/my-homelab.git
     targetRevision: HEAD
     path: infrastrucure
-    directory:
-      recurse: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
   syncPolicy:
     automated:
       prune: false
