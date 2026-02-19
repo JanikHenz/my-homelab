@@ -40,7 +40,7 @@ spec:
             - name: config
               mountPath: /config
             - name: media
-              mountPath: /series
+              mountPath: /media
       volumes:
         - name: config
           persistentVolumeClaim:
