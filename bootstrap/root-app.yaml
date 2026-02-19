@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/JanikHenz/my-homelab.git'
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
     path: .
     directory:
@@ -15,6 +15,5 @@ spec:
     name: homelab
     namespace: argocd
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
