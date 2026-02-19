@@ -15,5 +15,6 @@ spec:
     name: homelab
     namespace: argocd
   syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

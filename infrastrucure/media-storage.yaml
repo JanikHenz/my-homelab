@@ -137,6 +137,29 @@ spec:
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 1Gi } }
   volumeName: prowlarr-config-pv
+---
+# JELLYSEERR CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: jellyseerr-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/jellyseerr/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyseerr-config-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: jellyseerr-config-pv
 
 
 # --- SHARED MEDIA STORAGE (GEMEINSAM) ---
