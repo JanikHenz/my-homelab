@@ -114,6 +114,29 @@ spec:
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 1Gi } }
   volumeName: qbittorrent-config-pv
+---
+# PROWLARR CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prowlarr-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 1Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/prowlarr/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prowlarr-config-pvc
+  namespace: media
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 1Gi } }
+  volumeName: prowlarr-config-pv
 
 
 # --- SHARED MEDIA STORAGE (GEMEINSAM) ---
