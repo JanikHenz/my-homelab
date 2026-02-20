@@ -4,10 +4,11 @@ metadata:
   name: flaresolverr-service
   namespace: media
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: flaresolverr
   ports:
     - name: http
       port: 8191
       targetPort: 8191
+      nodePort: 30191
