@@ -17,7 +17,7 @@ spec:
         kubernetes.io/hostname: homeserver
       containers:
         - name: jellyseerr
-          image: ghcr.io/fallenbagel/jellyseerr:latest
+          image: ghcr.io/seerr-team/seerr:latest 
           ports:
             - containerPort: 5055
           env:
