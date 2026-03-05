@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wger-web
+  namespace: wger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wger-web
+  template:
+    metadata:
+      labels:
+        app: wger-web
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-db
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z wger-db-service 5432; do
+                echo "Waiting for database..."
+                sleep 2
+              done
+      containers:
+        - name: wger
+          image: wger/server:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DJANGO_DB_ENGINE
+              value: "django.db.backends.postgresql"
+            - name: DJANGO_DB_DATABASE
+              value: "wger"
+            - name: DJANGO_DB_USER
+              value: "wger"
+            - name: DJANGO_DB_PASSWORD
+              value: "wger"
+            - name: DJANGO_DB_HOST
+              value: "wger-db-service"
+            - name: DJANGO_DB_PORT
+              value: "5432"
+            - name: DJANGO_CACHE_BACKEND
+              value: "django_redis.cache.RedisCache"
+            - name: DJANGO_CACHE_LOCATION
+              value: "redis://wger-cache-service:6379/1"
+            - name: DJANGO_CACHE_CLIENT_CLASS
+              value: "django_redis.client.DefaultClient"
+            - name: CELERY_BROKER
+              value: "redis://wger-cache-service:6379/2"
+            - name: CELERY_BACKEND
+              value: "redis://wger-cache-service:6379/2"
+            - name: DJANGO_DEBUG
+              value: "False"
+            - name: SECRET_KEY
+              value: "changeme-insecure-key-for-demo"
+            - name: SIGNING_KEY
+              value: "changeme-insecure-signing-key"
+            - name: ALLOW_REGISTRATION
+              value: "True"
+            - name: ALLOW_GUEST_USERS
+              value: "True"
+            - name: ALLOW_UPLOAD_VIDEOS
+              value: "True"
+            - name: SYNC_EXERCISES_ON_STARTUP
+              value: "True"
+            - name: DOWNLOAD_EXERCISE_IMAGES_ON_STARTUP
+              value: "True"
+            - name: TIME_ZONE
+              value: "Europe/Zurich"
+            - name: SITE_URL
+              value: "http://wger-service"
+          volumeMounts:
+            - name: static-storage
+              mountPath: /home/wger/static
+            - name: media-storage
+              mountPath: /home/wger/media
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+      volumes:
+        - name: static-storage
+          persistentVolumeClaim:
+            claimName: wger-static-pvc
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: wger-media-pvc

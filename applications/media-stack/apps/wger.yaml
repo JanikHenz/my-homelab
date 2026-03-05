@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wger
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    targetRevision: HEAD
+    path: applications/media-stack/manifests/wger
+  destination:
+    name: homelab
+    namespace: wger
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

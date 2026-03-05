@@ -1,0 +1,93 @@
+# --- WGER STORAGE ---
+
+# WGER POSTGRES
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wger-postgres-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/wger/postgres" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wger-postgres-pvc
+  namespace: wger
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: wger-postgres-pv
+---
+# WGER REDIS
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wger-redis-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 1Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/wger/redis" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wger-redis-pvc
+  namespace: wger
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 1Gi } }
+  volumeName: wger-redis-pv
+---
+# WGER STATIC (ReadWriteMany: wger-web + wger-nginx greifen gleichzeitig zu)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wger-static-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 2Gi }
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/wger/static" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wger-static-pvc
+  namespace: wger
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteMany"]
+  resources: { requests: { storage: 2Gi } }
+  volumeName: wger-static-pv
+---
+# WGER MEDIA (ReadWriteMany: wger-web, wger-celery-worker + wger-nginx greifen gleichzeitig zu)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wger-media-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/wger/media" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wger-media-pvc
+  namespace: wger
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteMany"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: wger-media-pv

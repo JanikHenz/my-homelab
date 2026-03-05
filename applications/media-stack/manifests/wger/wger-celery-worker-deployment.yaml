@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wger-celery-worker
+  namespace: wger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wger-celery-worker
+  template:
+    metadata:
+      labels:
+        app: wger-celery-worker
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: celery-worker
+          image: wger/server:latest
+          command:
+            - /start-worker
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          env:
+            - name: DJANGO_DB_ENGINE
+              value: "django.db.backends.postgresql"
+            - name: DJANGO_DB_DATABASE
+              value: "wger"
+            - name: DJANGO_DB_USER
+              value: "wger"
+            - name: DJANGO_DB_PASSWORD
+              value: "wger"
+            - name: DJANGO_DB_HOST
+              value: "wger-db-service"
+            - name: DJANGO_DB_PORT
+              value: "5432"
+            - name: DJANGO_CACHE_BACKEND
+              value: "django_redis.cache.RedisCache"
+            - name: DJANGO_CACHE_LOCATION
+              value: "redis://wger-cache-service:6379/1"
+            - name: DJANGO_CACHE_CLIENT_CLASS
+              value: "django_redis.client.DefaultClient"
+            - name: CELERY_BROKER
+              value: "redis://wger-cache-service:6379/2"
+            - name: CELERY_BACKEND
+              value: "redis://wger-cache-service:6379/2"
+            - name: TIME_ZONE
+              value: "Europe/Zurich"
+          volumeMounts:
+            - name: media-storage
+              mountPath: /home/wger/media
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: media-storage
+          persistentVolumeClaim:
+            claimName: wger-media-pvc
