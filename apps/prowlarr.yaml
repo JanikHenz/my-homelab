@@ -1,16 +1,16 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: jellyfin
+  name: prowlarr
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    repoURL: https://github.com/janikhenz/my-homelab.git
     targetRevision: HEAD
-    path: applications/media-stack/manifests/jellyfin
+    path: manifests/media-stack/prowlarr
   destination:
-    name: homelab
+    server: https://kubernetes.default.svc
     namespace: media
   syncPolicy:
     syncOptions:

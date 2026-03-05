@@ -8,9 +8,9 @@ spec:
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: .
+    path: apps
     directory:
-      recurse: true
+      recurse: false
   destination:
     name: homelab
     namespace: argocd

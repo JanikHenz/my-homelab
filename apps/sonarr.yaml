@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: applications/media-stack/manifests/sonarr
+    path: manifests/media-stack/sonarr
   destination:
     name: homelab
     namespace: media

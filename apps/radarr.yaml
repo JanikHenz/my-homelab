@@ -1,17 +1,17 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: wger
+  name: radarr
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: applications/wger/manifests
+    path: manifests/media-stack/radarr
   destination:
     name: homelab
-    namespace: wger
+    namespace: media
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
