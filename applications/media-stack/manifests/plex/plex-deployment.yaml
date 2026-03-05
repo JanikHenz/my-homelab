@@ -33,7 +33,7 @@ spec:
             limits:
               cpu: 3000m
               memory: 6Gi
-              nvidia.com/gpu: 1
+              nvidia.com/gpu: "1"
           env:
             - name: PLEX_CLAIM
               valueFrom:

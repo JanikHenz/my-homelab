@@ -91,12 +91,19 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8000
+            failureThreshold: 30 # 30 * 10s = 5 Minuten Zeit zum starten
+            periodSeconds: 30
           livenessProbe:
             httpGet:
               path: /
               port: 8000
-            initialDelaySeconds: 60
-            periodSeconds: 10
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            failureThreshold: 5 # 5 * 30s = 2.5 Minuten toleranz
       volumes:
         - name: static-storage
           persistentVolumeClaim:

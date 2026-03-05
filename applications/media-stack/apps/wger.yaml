@@ -13,5 +13,8 @@ spec:
     name: homelab
     namespace: wger
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
