@@ -8,13 +8,10 @@ spec:
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: applications/media-stack/manifests/wger
+    path: applications/fitness/manifests/wger
   destination:
     name: homelab
-    namespace: wger
+    namespace: fitness
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
     syncOptions:
       - CreateNamespace=true

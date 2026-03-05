@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: wger-nginx-config
-  namespace: wger
+  namespace: fitness
 data:
   nginx.conf: |
     upstream wger {

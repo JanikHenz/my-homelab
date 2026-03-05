@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wger-web
-  namespace: wger
+  namespace: fitness
 spec:
   replicas: 1
   selector:

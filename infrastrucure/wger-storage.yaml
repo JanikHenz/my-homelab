@@ -16,7 +16,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wger-postgres-pvc
-  namespace: wger
+  namespace: fitness
 spec:
   storageClassName: ""
   accessModes: ["ReadWriteOnce"]
@@ -39,7 +39,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wger-redis-pvc
-  namespace: wger
+  namespace: fitness
 spec:
   storageClassName: ""
   accessModes: ["ReadWriteOnce"]
@@ -62,7 +62,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wger-static-pvc
-  namespace: wger
+  namespace: fitness
 spec:
   storageClassName: ""
   accessModes: ["ReadWriteMany"]
@@ -85,7 +85,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: wger-media-pvc
-  namespace: wger
+  namespace: fitness
 spec:
   storageClassName: ""
   accessModes: ["ReadWriteMany"]
