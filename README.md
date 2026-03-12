@@ -7,7 +7,7 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 ## 📋 Inhaltsverzeichnis
 
 - [Netzwerk-Topologie](#netzwerk-topologie)
-- [Hardware & Cluster](#hardware=&-cluster)
+- [Hardware & Cluster](#hardware--cluster)
 - [GitOps-Architektur](#gitops-architektur)
 - [Namespaces & Stacks](#namespaces--stacks)
 - [Media Stack](#media-stack)
@@ -77,17 +77,13 @@ graph TD
 | ---------------- | ------------------------------- |
 | Rolle            | Kubernetes Control Plane        |
 | Software         | Kubernetes, ArgoCD, cloudflared |
-| Externer Zugriff | Cloudflare Zero Trust Tunnel    |
-| GitHub-Repo      | `JanikHenz/my-homelab`          |
 
 ### Homeserver – Worker Node
 
 | Eigenschaft | Wert |
-|-------------------|-----------------------------||
+|-------------------|-----------------------------|
 | Hostname | `homeserver` |
 | Rolle | Kubernetes Worker Node |
-| GPU | NVIDIA (Time-Slicing, 2×) |
-| Storage-Mount | `/mnt/data/` |
 
 ```mermaid
 graph LR
@@ -159,38 +155,6 @@ Alle ArgoCD Applications haben:
 
 - **`automated.prune: true`** – verwaiste Ressourcen werden gelöscht
 - **`automated.selfHeal: true`** – manuelle Änderungen am Cluster werden revertiert (nur root-app)
-
----
-
-## Namespaces & Stacks
-
-```mermaid
-graph LR
-    subgraph argocd
-        ARGO["ArgoCD Controller"]
-    end
-    subgraph kube-system
-        NVIDIA["NVIDIA Device Plugin"]
-    end
-    subgraph media["namespace: media"]
-        JF["Jellyfin :8096"]
-        PL["Plex :32400"]
-        JS["Jellyseerr :5055"]
-        RD["Radarr :7878"]
-        SN["Sonarr :8989"]
-        PR["Prowlarr :9696"]
-        QB["qBittorrent :8080"]
-        FS["FlareSolverr :8191"]
-    end
-    subgraph fitness["namespace: fitness"]
-        WN["wger-nginx :80"]
-        WW["wger-web :8000"]
-        WDB["wger-db :5432"]
-        WC["wger-cache :6379"]
-        WCW["celery-worker"]
-        WCB["celery-beat"]
-    end
-```
 
 ---
 
@@ -314,15 +278,6 @@ flowchart TD
     WC --> WRPVC
 ```
 
-### initContainer
-
-`wger-web` startet erst, wenn die Datenbank erreichbar ist:
-
-```
-initContainer: busybox
-  until nc -z wger-db-service 5432; do sleep 2; done
-```
-
 ### Services & Images
 
 | Service            | Image                 | Port | Service-Typ | NodePort |
@@ -338,68 +293,6 @@ initContainer: busybox
 
 ## Storage-Übersicht
 
-Alle Volumes sind statische **hostPath PersistentVolumes** mit `Retain`-Policy auf dem Node `homeserver`.
-
-```mermaid
-graph LR
-    subgraph HOST["💾 Homeserver /mnt/data/"]
-        direction TB
-        D_JF["/jellyfin/config\n10Gi"]
-        D_PL["/plex/config\n10Gi"]
-        D_RD["/radarr/config\n1Gi"]
-        D_SN["/sonarr/config\n1Gi"]
-        D_QB["/qbittorrent/config\n1Gi"]
-        D_PR["/prowlarr/config\n1Gi"]
-        D_JYS["/jellyseerr/config\n5Gi"]
-        D_MEDIA["/media\n500Gi  SHARED"]
-        D_WPG["/wger/postgres\n5Gi"]
-        D_WRD["/wger/redis\n1Gi"]
-        D_WST["/wger/static\n2Gi  RWX"]
-        D_WMD["/wger/media\n10Gi  RWX"]
-    end
-
-    subgraph MEDIA_NS["namespace: media"]
-        JF["Jellyfin"]
-        PL["Plex"]
-        RD["Radarr"]
-        SN["Sonarr"]
-        QB["qBittorrent"]
-        PR["Prowlarr"]
-        JYS["Jellyseerr"]
-    end
-
-    subgraph FITNESS_NS["namespace: fitness"]
-        WW["wger-web"]
-        WN["wger-nginx"]
-        WDB["wger-db"]
-        WC["wger-cache"]
-        WCW["celery-worker"]
-    end
-
-    D_JF --> JF
-    D_PL --> PL
-    D_RD --> RD
-    D_SN --> SN
-    D_QB --> QB
-    D_PR --> PR
-    D_JYS --> JYS
-
-    D_MEDIA --> JF
-    D_MEDIA --> PL
-    D_MEDIA --> RD
-    D_MEDIA --> SN
-    D_MEDIA --> QB
-
-    D_WPG --> WDB
-    D_WRD --> WC
-    D_WST --> WW
-    D_WST --> WN
-    D_WMD --> WW
-    D_WMD --> WN
-    D_WMD --> WCW
-```
-
-### Storage-Tabelle
 
 | PVC                      | Größe  | Access Mode | Pfad auf Host                  | Konsumenten                          |
 | ------------------------ | ------ | ----------- | ------------------------------ | ------------------------------------ |
@@ -481,7 +374,7 @@ flowchart TD
 ```
 my-homelab/
 ├── bootstrap/
-│   └── root-app.yaml          # ArgoCD App of Apps – Einstiegspunkt
+│   └── root-app.yaml          # ArgoCD App of Apps
 │
 ├── apps/                      # ArgoCD Application-Definitionen
 │   ├── jellyfin.yaml
