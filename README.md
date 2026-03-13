@@ -73,17 +73,17 @@ graph TD
 
 ### Raspberry Pi – Control Plane
 
-| Eigenschaft      | Wert                            |
-| ---------------- | ------------------------------- |
-| Rolle            | Kubernetes Control Plane        |
-| Software         | Kubernetes, ArgoCD, cloudflared |
+| Eigenschaft | Wert                            |
+| ----------- | ------------------------------- |
+| Rolle       | Kubernetes Control Plane        |
+| Software    | Kubernetes, ArgoCD, cloudflared |
 
 ### Homeserver – Worker Node
 
-| Eigenschaft | Wert |
-|-------------------|-----------------------------|
-| Hostname | `homeserver` |
-| Rolle | Kubernetes Worker Node |
+| Eigenschaft | Wert                   |
+| ----------- | ---------------------- |
+| Hostname    | `homeserver`           |
+| Rolle       | Kubernetes Worker Node |
 
 ```mermaid
 graph LR
@@ -215,14 +215,14 @@ flowchart TD
 
 | Service      | Image                                      | Port  | NodePort | GPU |
 | ------------ | ------------------------------------------ | ----- | -------- | --- |
-| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30008    | ✅  |
-| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30009    | ✅  |
-| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | —        |     |
-| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30078    |     |
-| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30089    |     |
-| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30696    |     |
-| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30180    |     |
-| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | 30191    |     |
+| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | ✅  |
+| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | ✅  |
+| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    |     |
+| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    |     |
+| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    |     |
+| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    |     |
+| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    |     |
+| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | 30009    |     |
 
 ---
 
@@ -237,7 +237,7 @@ flowchart TD
     USER["👤 User / Browser"]
 
     subgraph FITNESS["namespace: fitness"]
-        WN["wger-nginx\nnginx:stable-alpine\nNodePort :30081\nReverse Proxy"]
+        WN["wger-nginx\nnginx:stable-alpine\nNodePort :30010\nReverse Proxy"]
 
         subgraph BACKEND["Backend"]
             WW["wger-web\nwger/server:latest\nDjango App :8000"]
@@ -292,7 +292,6 @@ flowchart TD
 ---
 
 ## Storage-Übersicht
-
 
 | PVC                      | Größe  | Access Mode | Pfad auf Host                  | Konsumenten                          |
 | ------------------------ | ------ | ----------- | ------------------------------ | ------------------------------------ |
@@ -356,16 +355,16 @@ flowchart TD
 
 | Service             | Namespace | Container-Port | NodePort  | URL (Beispiel)                |
 | ------------------- | --------- | -------------- | --------- | ----------------------------- |
-| Jellyfin            | media     | 8096           | **30008** | `http://homeserver:30008`     |
-| Plex                | media     | 32400          | **30009** | `http://homeserver:30009/web` |
-| Radarr              | media     | 7878           | **30078** | `http://homeserver:30078`     |
-| Sonarr              | media     | 8989           | **30089** | `http://homeserver:30089`     |
-| Prowlarr            | media     | 9696           | **30696** | `http://homeserver:30696`     |
-| qBittorrent WebUI   | media     | 8080           | **30180** | `http://homeserver:30180`     |
-| qBittorrent Torrent | media     | 6881 TCP/UDP   | **30881** | —                             |
-| FlareSolverr        | media     | 8191           | **30191** | `http://homeserver:30191`     |
-| Jellyseerr          | media     | 5055           | —         | ClusterIP only                |
-| wger (nginx)        | fitness   | 80             | **30081** | `http://homeserver:30081`     |
+| Jellyfin            | media     | 8096           | **30001** | `http://homeserver:30001`     |
+| Plex                | media     | 32400          | **30002** | `http://homeserver:30002/web` |
+| Jellyseerr          | media     | 5055           | **30003** | `http://homeserver:30003`     |
+| Radarr              | media     | 7878           | **30004** | `http://homeserver:30004`     |
+| Sonarr              | media     | 8989           | **30005** | `http://homeserver:30005`     |
+| Prowlarr            | media     | 9696           | **30006** | `http://homeserver:30006`     |
+| qBittorrent WebUI   | media     | 8080           | **30007** | `http://homeserver:30007`     |
+| qBittorrent Torrent | media     | 6881 TCP/UDP   | **30008** | —                             |
+| FlareSolverr        | media     | 8191           | **30009** | `http://homeserver:30009`     |
+| wger (nginx)        | fitness   | 80             | **30010** | `http://homeserver:30010`     |
 
 ---
 

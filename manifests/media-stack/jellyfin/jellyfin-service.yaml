@@ -9,5 +9,5 @@ spec:
     - protocol: TCP
       port: 8096
       targetPort: 8096
-      nodePort: 30008
+      nodePort: 30001
   type: NodePort

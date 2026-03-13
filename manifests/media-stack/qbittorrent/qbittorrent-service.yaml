@@ -11,14 +11,14 @@ spec:
     - name: webui
       port: 8080
       targetPort: 8080
-      nodePort: 30180
+      nodePort: 30007
     - name: torrent-tcp
       port: 6881
       targetPort: 6881
-      nodePort: 30881
+      nodePort: 30008
       protocol: TCP
     - name: torrent-udp
       port: 6881
       targetPort: 6881
-      nodePort: 30881
+      nodePort: 30008
       protocol: UDP

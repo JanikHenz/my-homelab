@@ -11,4 +11,4 @@ spec:
     - name: http
       port: 8191
       targetPort: 8191
-      nodePort: 30191
+      nodePort: 30009

@@ -10,4 +10,4 @@ spec:
   ports:
     - port: 7878
       targetPort: 7878
-      nodePort: 30078 # Fester Port für Browser-Zugriff
+      nodePort: 30004 # Fester Port für Browser-Zugriff

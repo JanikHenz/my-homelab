@@ -10,4 +10,4 @@ spec:
   ports:
     - port: 8989
       targetPort: 8989
-      nodePort: 30089 # Fester Port für Browser-Zugriff
+      nodePort: 30005 # Fester Port für Browser-Zugriff
