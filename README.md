@@ -1,10 +1,10 @@
-# 🏠 My Homelab
+# My Homelab
 
 Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust für externen Zugriff, NVIDIA GPU-Unterstützung sowie zwei Applikations-Stacks: **Media** und **Fitness**.
 
 ---
 
-## 📋 Inhaltsverzeichnis
+## Inhaltsverzeichnis
 
 - [Netzwerk-Topologie](#netzwerk-topologie)
 - [Hardware & Cluster](#hardware--cluster)
@@ -25,22 +25,22 @@ Beide Nodes sind direkt am Router im Heimnetz angeschlossen. Der **Raspberry Pi*
 
 ```mermaid
 graph TD
-    INET(["🌐 Internet"])
-    CF["☁️ Cloudflare\nZero Trust"]
+    INET(["Internet"])
+    CF["Cloudflare\nZero Trust"]
 
-    subgraph HOME["🏠 Heimnetz"]
-        ROUTER["📡 Router"]
+    subgraph HOME["Heimnetz"]
+        ROUTER["Router"]
 
-        subgraph RASPY["🍓 Raspberry Pi\n(Control Plane)"]
-            K8S_CP["☸️ Kubernetes\nControl Plane\n(kube-apiserver, etcd, ...)"]
-            ARGO["🔁 ArgoCD"]
-            CFD["🔒 cloudflared\n(Tunnel)"]
+        subgraph RASPY["Raspberry Pi\n(Control Plane)"]
+            K8S_CP["Kubernetes\nControl Plane\n(kube-apiserver, etcd, ...)"]
+            ARGO["ArgoCD"]
+            CFD["cloudflared\n(Tunnel)"]
         end
 
-        subgraph SERVER["🖥️ Homeserver\n(Worker Node)"]
-            K8S_W["☸️ Kubernetes\nWorker (kubelet)"]
-            GPU["🎮 NVIDIA GPU"]
-            DISK["💾 /mnt/data/"]
+        subgraph SERVER["Homeserver\n(Worker Node)"]
+            K8S_W["Kubernetes\nWorker (kubelet)"]
+            GPU["NVIDIA GPU"]
+            DISK["/mnt/data/"]
 
             subgraph NS_MEDIA["namespace: media"]
                 MEDIA_APPS["Jellyfin · Plex · Jellyseerr\nRadarr · Sonarr · Prowlarr\nqBittorrent · FlareSolverr"]
@@ -51,7 +51,7 @@ graph TD
         end
     end
 
-    GH["📦 GitHub\nJanikHenz/my-homelab"]
+    GH["GitHub\nJanikHenz/my-homelab"]
 
     INET <-->|"Cloudflare Tunnel"| CF
     CF <-->|"outbound tunnel"| CFD
@@ -87,16 +87,16 @@ graph TD
 
 ```mermaid
 graph LR
-    subgraph RASPY["🍓 Raspberry Pi (Control Plane)"]
+    subgraph RASPY["Raspberry Pi (Control Plane)"]
         CP["kube-apiserver\netcd\ncontroller-manager\nscheduler"]
         ARGO["ArgoCD"]
         CFD["cloudflared"]
     end
 
-    subgraph SERVER["🖥️ Homeserver (Worker Node)"]
+    subgraph SERVER["Homeserver (Worker Node)"]
         KW["kubelet"]
-        GPU["🎮 NVIDIA GPU\n(Time-Slicing 2×)"]
-        DISK["💾 /mnt/data/"]
+        GPU["NVIDIA GPU\n(Time-Slicing 2×)"]
+        DISK["/mnt/data/"]
 
         subgraph SYS["kube-system"]
             NDP["nvidia-device-plugin"]
@@ -126,17 +126,17 @@ Das Deployment folgt dem **App of Apps**-Pattern. ArgoCD überwacht das GitHub-R
 
 ```mermaid
 flowchart LR
-    DEV["👨‍💻 Developer\nPush to GitHub"]
-    GH["📦 GitHub\nJanikHenz/my-homelab"]
-    ROOT["🌱 root-app\nbootstrap/root-app.yaml\nwatches: apps/"]
-    APPS["📁 apps/\n*.yaml (ArgoCD Applications)"]
+    DEV["Developer\nPush to GitHub"]
+    GH["GitHub\nJanikHenz/my-homelab"]
+    ROOT["root-app\nbootstrap/root-app.yaml\nwatches: apps/"]
+    APPS["apps/\n*.yaml (ArgoCD Applications)"]
 
     subgraph MANIFESTS["manifests/"]
         MS["media-stack/\njellyfin, plex, radarr\nsonarr, prowlarr\nqbittorrent, jellyseerr\nflaresolverr"]
         FS["fitness/wger/\nweb, nginx, db\ncache, celery"]
     end
 
-    subgraph CLUSTER["☸️ homelab Cluster"]
+    subgraph CLUSTER["homelab Cluster"]
         NS_MEDIA["namespace: media"]
         NS_FITNESS["namespace: fitness"]
     end
@@ -166,12 +166,12 @@ Der Media Stack automatisiert das gesamte Medien-Management: von der Suche über
 
 ```mermaid
 flowchart TD
-    USER["👤 User / Browser"]
+    USER["User / Browser"]
 
     subgraph FRONTEND["Frontend (Zugriff)"]
         JS["Jellyseerr\nNodePort :30005\nRequest Management"]
-        JF["Jellyfin\nNodePort :30008\n🎮 GPU\nMedia Server"]
-        PL["Plex\nNodePort :30009\n🎮 GPU\nMedia Server"]
+        JF["Jellyfin\nNodePort :30008\n GPU\nMedia Server"]
+        PL["Plex\nNodePort :30009\n GPU\nMedia Server"]
     end
 
     subgraph AUTOMATION["Automation (*arr)"]
@@ -185,7 +185,7 @@ flowchart TD
         FS["FlareSolverr\nNodePort :30191\nCloudflare Bypass"]
     end
 
-    subgraph STORAGE["💾 Shared Storage"]
+    subgraph STORAGE["Shared Storage"]
         GMP["global-media-pvc\n500Gi  /mnt/data/media"]
     end
 
@@ -215,8 +215,8 @@ flowchart TD
 
 | Service      | Image                                      | Port  | NodePort | GPU |
 | ------------ | ------------------------------------------ | ----- | -------- | --- |
-| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | ✅  |
-| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | ✅  |
+| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | true |
+| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | true |
 | Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    |     |
 | Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    |     |
 | Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    |     |
@@ -234,7 +234,7 @@ wger ist eine selbst gehostete Fitness-Tracking-Anwendung. Der Stack besteht aus
 
 ```mermaid
 flowchart TD
-    USER["👤 User / Browser"]
+    USER["User / Browser"]
 
     subgraph FITNESS["namespace: fitness"]
         WN["wger-nginx\nnginx:stable-alpine\nNodePort :30010\nReverse Proxy"]
@@ -250,7 +250,7 @@ flowchart TD
             WC["wger-cache\nredis:7-alpine\n:6379\nDB1: Cache\nDB2: Celery Broker"]
         end
 
-        subgraph STORAGE["💾 Shared Storage"]
+        subgraph STORAGE["Shared Storage"]
             WPGPVC["wger-postgres-pvc\n5Gi"]
             WRPVC["wger-redis-pvc\n1Gi"]
             WSPVC["wger-static-pvc\n2Gi RWX"]
@@ -325,7 +325,7 @@ flowchart TD
     end
 
     subgraph NODE["Node: homeserver"]
-        GPU_HW["🎮 Physische NVIDIA GPU"]
+        GPU_HW["Physische NVIDIA GPU"]
         SLOT1["Virtueller Slot 1"]
         SLOT2["Virtueller Slot 2"]
         GPU_HW --> SLOT1
