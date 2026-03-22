@@ -1,6 +1,6 @@
 # My Homelab
 
-Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust für externen Zugriff, NVIDIA GPU-Unterstützung sowie zwei Applikations-Stacks: **Media** und **Fitness**.
+Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust für externen Zugriff, NVIDIA GPU-Unterstützung sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
 
 ---
 
@@ -12,6 +12,7 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 - [Namespaces & Stacks](#namespaces--stacks)
 - [Media Stack](#media-stack)
 - [Fitness Stack (wger)](#fitness-stack-wger)
+- [Dashboard](#dashboard)
 - [Storage-Übersicht](#storage-übersicht)
 - [NVIDIA GPU](#nvidia-gpu)
 - [Port-Übersicht](#port-übersicht)
@@ -134,11 +135,13 @@ flowchart LR
     subgraph MANIFESTS["manifests/"]
         MS["media-stack/\njellyfin, plex, radarr\nsonarr, prowlarr\nqbittorrent, jellyseerr\nflaresolverr"]
         FS["fitness/wger/\nweb, nginx, db\ncache, celery"]
+        DS["dashboard/\nnginx deployment"]
     end
 
     subgraph CLUSTER["homelab Cluster"]
         NS_MEDIA["namespace: media"]
         NS_FITNESS["namespace: fitness"]
+        NS_DEFAULT["namespace: default"]
     end
 
     DEV -->|git push| GH
@@ -147,6 +150,7 @@ flowchart LR
     APPS -->|points to| MANIFESTS
     MS -->|deploys to| NS_MEDIA
     FS -->|deploys to| NS_FITNESS
+    DS -->|deploys to| NS_DEFAULT
 ```
 
 ### Sync-Policy
@@ -213,16 +217,16 @@ flowchart TD
 
 ### Services & Images
 
-| Service      | Image                                      | Port  | NodePort | GPU |
-| ------------ | ------------------------------------------ | ----- | -------- | --- |
+| Service      | Image                                      | Port  | NodePort | GPU  |
+| ------------ | ------------------------------------------ | ----- | -------- | ---- |
 | Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | true |
 | Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | true |
-| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    |     |
-| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    |     |
-| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    |     |
-| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    |     |
-| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    |     |
-| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | 30009    |     |
+| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    |      |
+| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    |      |
+| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    |      |
+| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    |      |
+| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    |      |
+| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | 30009    |      |
 
 ---
 
@@ -288,6 +292,42 @@ flowchart TD
 | wger-cache         | `redis:7-alpine`      | 6379 | ClusterIP   | —        |
 | wger-celery-worker | `wger/server:latest`  | —    | —           | —        |
 | wger-celery-beat   | `wger/server:latest`  | —    | —           | —        |
+
+---
+
+## Dashboard
+
+Eine selbst gehostete Web-Oberfläche auf dem **Raspberry Pi**, die als zentrales Homelab-Dashboard dient. Die Seite besteht aus reinem HTML/CSS/JS und wird über ein nginx-Image bereitgestellt, das automatisch via GitHub Actions gebaut und via ArgoCD deployed wird.
+
+### Deployment-Flow
+
+```mermaid
+flowchart LR
+    DEV["Developer\nPush to GitHub"]
+    GH_DASH["GitHub\nJanikHenz/dashboard"]
+    GH_ACT["GitHub Actions\ndocker-publish.yml"]
+    GHCR["ghcr.io/janikhenz/dashboard:latest"]
+    GH_HOME["GitHub\nJanikHenz/my-homelab"]
+    ARGO["ArgoCD\napps/dashboard.yaml"]
+    POD["nginx Pod\nRaspberry Pi\nNodePort :30080"]
+
+    DEV -->|git push| GH_DASH
+    GH_DASH -->|trigger| GH_ACT
+    GH_ACT -->|build & push image| GHCR
+    ARGO -->|pull image| GHCR
+    GH_HOME -->|sync| ARGO
+    ARGO -->|deploy| POD
+```
+
+### Details
+
+| Eigenschaft | Wert                                                          |
+| ----------- | ------------------------------------------------------------- |
+| Image       | `ghcr.io/janikhenz/dashboard:latest`                          |
+| Node        | `raspberrypi`                                                 |
+| NodePort    | `30080`                                                       |
+| URL         | `http://raspberrypi:30080`                                    |
+| Source Repo | [JanikHenz/dashboard](https://github.com/JanikHenz/dashboard) |
 
 ---
 
@@ -365,6 +405,7 @@ flowchart TD
 | qBittorrent Torrent | media     | 6881 TCP/UDP   | **30008** | —                             |
 | FlareSolverr        | media     | 8191           | **30009** | `http://homeserver:30009`     |
 | wger (nginx)        | fitness   | 80             | **30010** | `http://homeserver:30010`     |
+| Dashboard (nginx)   | default   | 80             | **30080** | `http://raspberrypi:30080`    |
 
 ---
 
@@ -376,6 +417,7 @@ my-homelab/
 │   └── root-app.yaml          # ArgoCD App of Apps
 │
 ├── apps/                      # ArgoCD Application-Definitionen
+│   ├── dashboard.yaml
 │   ├── jellyfin.yaml
 │   ├── plex.yaml
 │   ├── jellyseerr.yaml
@@ -395,6 +437,7 @@ my-homelab/
 │   └── nvidia-runtimeclass.yaml  # RuntimeClass: nvidia
 │
 └── manifests/                 # Kubernetes Manifeste pro App
+    ├── dashboard/             # Deployment + Service (nginx)
     ├── media-stack/
     │   ├── jellyfin/          # Deployment + Service
     │   ├── plex/
