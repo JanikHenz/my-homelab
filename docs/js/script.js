@@ -26,24 +26,24 @@
   });
 
   // Configure marked to handle mermaid blocks
-  const renderer = new marked.Renderer();
-  const originalCode = renderer.code.bind(renderer);
   let mermaidIndex = 0;
 
-  renderer.code = function(code, language) {
-    if (language === 'mermaid') {
-      const id = 'mermaid-' + mermaidIndex++;
-      return `<div class="mermaid-wrapper"><div class="mermaid" id="${id}">${code}</div></div>`;
+  marked.use({
+    renderer: {
+      code({ text, lang }) {
+        if (lang === 'mermaid') {
+          const id = 'mermaid-' + mermaidIndex++;
+          return `<div class="mermaid-wrapper"><div class="mermaid" id="${id}">${text}</div></div>`;
+        }
+        return `<pre><code class="language-${lang || ''}">${text}</code></pre>`;
+      }
     }
-    return originalCode(code, language);
-  };
-
-  marked.setOptions({ renderer });
+  });
 
   // Fetch README from GitHub
-  loadReadme().then(md => {
+  loadReadme().then(async md => {
     document.getElementById('content').innerHTML = marked.parse(md);
-    mermaid.run({ querySelector: '.mermaid' });
+    await mermaid.run({ querySelector: '.mermaid' });
 
     // Active nav highlight on scroll
     const headings = document.querySelectorAll('h2, h3');
