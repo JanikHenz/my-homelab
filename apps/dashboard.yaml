@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: manifests/media-stack/nginx-dashboard
+    path: manifests/dashboard
   destination:
     name: homelab
     namespace: default
