@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-dashboard-service
+spec:
+  selector:
+    app: nginx-dashboard
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 80
+  type: NodePort

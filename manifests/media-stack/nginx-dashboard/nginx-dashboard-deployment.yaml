@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-dashboard-deployment
+  labels:
+    app: nginx-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-dashboard
+  template:
+    metadata:
+      labels:
+        app: nginx-dashboard
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: raspberrypi
+      containers:
+        - name: nginx
+          image: ghcr.io/janikhenz/dashboard:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes: []
