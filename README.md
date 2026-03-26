@@ -1,11 +1,12 @@
 # My Homelab
 
-Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust für externen Zugriff, NVIDIA GPU-Unterstützung sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
+Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust + **Traefik Ingress** für externen Zugriff, NVIDIA GPU-Unterstützung sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
 
 ---
 
 ## Inhaltsverzeichnis
 
+- [Screenshots](#screenshots)
 - [Netzwerk-Topologie](#netzwerk-topologie)
 - [Hardware & Cluster](#hardware--cluster)
 - [GitOps-Architektur](#gitops-architektur)
@@ -20,9 +21,45 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 
 ---
 
+## Screenshots
+
+### ArgoCD — GitOps Dashboard
+
+| ArgoCD Übersicht                                   | Repository Sync                            |
+| -------------------------------------------------- | ------------------------------------------ |
+| ![ArgoCD Dashboard](docs/img/argocd_dashboard.png) | ![ArgoCD Repos](docs/img/argocd_repos.png) |
+
+### Kubernetes Cluster
+
+| Pods                                             | Deployments                                                   |
+| ------------------------------------------------ | ------------------------------------------------------------- |
+| ![Kubernetes Pods](docs/img/kubernetes_pods.png) | ![Kubernetes Deployments](docs/img/kubernetes_deployment.png) |
+
+| Services                                            | Persistent Volumes                |
+| --------------------------------------------------- | --------------------------------- |
+| ![Kubernetes Services](docs/img/kubernetes_svc.png) | ![PV](docs/img/kubernetes_pv.png) |
+
+| PersistentVolumeClaims               |
+| ------------------------------------ |
+| ![PVCs](docs/img/kubernetes_pvc.png) |
+
+### Cloudflare Zero Trust
+
+| Access Dashboard                                     |
+| ---------------------------------------------------- |
+| ![Cloudflare Access](docs/img/cloudflare_access.png) |
+
+### Apps
+
+| Dashboard                                 | Jellyfin Media                           | Plex Media                       |
+| ----------------------------------------- | ---------------------------------------- | -------------------------------- |
+| ![Dashboard](docs/img/dashboard_apps.png) | ![Jellyfin](docs/img/jellyfin_media.png) | ![Plex](docs/img/pelx_media.png) |
+
+---
+
 ## Netzwerk-Topologie
 
-Beide Nodes sind direkt am Router im Heimnetz angeschlossen. Der **Raspberry Pi** fungiert als Kubernetes Control Plane und hostet ArgoCD sowie den `cloudflared`-Tunnel für externen Zugriff via **Cloudflare Zero Trust**. Der **Homeserver** ist der einzige Worker Node und führt alle Workloads aus.
+Beide Nodes sind direkt am Router im Heimnetz angeschlossen. Der **Raspberry Pi** fungiert als Kubernetes Control Plane und hostet ArgoCD sowie den `cloudflared`-Tunnel für externen Zugriff via **Cloudflare Zero Trust**. Traffic von außen geht durch den Cloudflare Tunnel auf **Traefik** (Port 80), der dann anhand des Host-Headers per `IngressRoute` an den jeweiligen ClusterIP-Service weiterleitet. Der **Homeserver** ist der einzige Worker Node und führt alle Workloads aus.
 
 ```mermaid
 graph TD
@@ -36,6 +73,7 @@ graph TD
             K8S_CP["Kubernetes\nControl Plane\n(kube-apiserver, etcd, ...)"]
             ARGO["ArgoCD"]
             CFD["cloudflared\n(Tunnel)"]
+            TRAEFIK["Traefik\n(Ingress Controller)\nPort 80"]
         end
 
         subgraph SERVER["Homeserver\n(Worker Node)"]
@@ -56,6 +94,9 @@ graph TD
 
     INET <-->|"Cloudflare Tunnel"| CF
     CF <-->|"outbound tunnel"| CFD
+    CFD -->|"HTTP Port 80"| TRAEFIK
+    TRAEFIK -->|"IngressRoute → ClusterIP"| NS_MEDIA
+    TRAEFIK -->|"IngressRoute → ClusterIP"| NS_FITNESS
     CFD --- ARGO
     ROUTER --- RASPY
     ROUTER --- SERVER
@@ -171,29 +212,38 @@ Der Media Stack automatisiert das gesamte Medien-Management: von der Suche über
 ```mermaid
 flowchart TD
     USER["User / Browser"]
+    TRAEFIK["Traefik\nIngressRoute\n(via Cloudflare Tunnel)"]
 
     subgraph FRONTEND["Frontend (Zugriff)"]
-        JS["Jellyseerr\nNodePort :30005\nRequest Management"]
-        JF["Jellyfin\nNodePort :30008\n GPU\nMedia Server"]
-        PL["Plex\nNodePort :30009\n GPU\nMedia Server"]
+        JS["Jellyseerr\njellyseerr.janikhenz.ch\nRequest Management"]
+        JF["Jellyfin\njellyfin.janikhenz.ch\n GPU\nMedia Server"]
+        PL["Plex\nplex.janikhenz.ch\n GPU\nMedia Server"]
     end
 
     subgraph AUTOMATION["Automation (*arr)"]
-        RD["Radarr\nNodePort :30078\nFilme"]
-        SN["Sonarr\nNodePort :30089\nSerien"]
-        PR["Prowlarr\nNodePort :30696\nIndexer Manager"]
+        RD["Radarr\nradarr.janikhenz.ch\nFilme"]
+        SN["Sonarr\nsonarr.janikhenz.ch\nSerien"]
+        PR["Prowlarr\nprowlarr.janikhenz.ch\nIndexer Manager"]
     end
 
     subgraph DOWNLOAD["Download"]
-        QB["qBittorrent\nNodePort :30180\nTorrent Client"]
-        FS["FlareSolverr\nNodePort :30191\nCloudflare Bypass"]
+        QB["qBittorrent\nqbt.janikhenz.ch\nTorrent Client"]
+        FS["FlareSolverr\n(ClusterIP intern)\nCloudflare Bypass"]
     end
 
     subgraph STORAGE["Shared Storage"]
         GMP["global-media-pvc\n500Gi  /mnt/data/media"]
     end
 
-    USER -->|"Medien anfragen"| JS
+    USER -->|"HTTPS"| TRAEFIK
+    TRAEFIK -->|"jellyseerr.janikhenz.ch"| JS
+    TRAEFIK -->|"jellyfin.janikhenz.ch"| JF
+    TRAEFIK -->|"plex.janikhenz.ch"| PL
+    TRAEFIK -->|"radarr.janikhenz.ch"| RD
+    TRAEFIK -->|"sonarr.janikhenz.ch"| SN
+    TRAEFIK -->|"prowlarr.janikhenz.ch"| PR
+    TRAEFIK -->|"qbt.janikhenz.ch"| QB
+
     JS -->|"Serien anfragen :8989"| SN
     JS -->|"Filme anfragen :7878"| RD
     JS -->|"Verbunden mit :8096"| JF
@@ -217,16 +267,18 @@ flowchart TD
 
 ### Services & Images
 
-| Service      | Image                                      | Port  | NodePort | GPU  |
-| ------------ | ------------------------------------------ | ----- | -------- | ---- |
-| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | true |
-| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | true |
-| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    |      |
-| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    |      |
-| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    |      |
-| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    |      |
-| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    |      |
-| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | 30009    |      |
+| Service      | Image                                      | Port  | Service-Typ | Subdomain (Traefik)           | GPU  |
+| ------------ | ------------------------------------------ | ----- | ----------- | ----------------------------- | ---- |
+| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | ClusterIP   | `jellyfin.janikhenz.ch`       | true |
+| Plex         | `plexinc/pms-docker:latest`                | 32400 | ClusterIP   | `plex.janikhenz.ch`           | true |
+| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | ClusterIP   | `jellyseerr.janikhenz.ch`     |      |
+| Radarr       | `linuxserver/radarr:latest`                | 7878  | ClusterIP   | `radarr.janikhenz.ch`         |      |
+| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | ClusterIP   | `sonarr.janikhenz.ch`         |      |
+| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | ClusterIP   | `prowlarr.janikhenz.ch`       |      |
+| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | ClusterIP   | `qbt.janikhenz.ch`            |      |
+| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | ClusterIP   | intern (kein öffentl. Zugang) |      |
+
+> **qBittorrent Torrent-Port:** Port 6881 TCP/UDP läuft als separater `NodePort 30008` (`qbittorrent-torrent-service`), da Raw-TCP/UDP-Traffic nicht durch Traefik's HTTP-Layer geroutet werden kann.
 
 ---
 
@@ -241,7 +293,7 @@ flowchart TD
     USER["User / Browser"]
 
     subgraph FITNESS["namespace: fitness"]
-        WN["wger-nginx\nnginx:stable-alpine\nNodePort :30010\nReverse Proxy"]
+        WN["wger-nginx\nnginx:stable-alpine\nClusterIP\nReverse Proxy"]
 
         subgraph BACKEND["Backend"]
             WW["wger-web\nwger/server:latest\nDjango App :8000"]
@@ -262,7 +314,7 @@ flowchart TD
         end
     end
 
-    USER -->|":30081"| WN
+    USER -->|"|wger.janikhenz.ch"| WN
     WN -->|"proxy_pass :8000"| WW
     WN -->|"/static/ → alias"| WSPVC
     WN -->|"/media/ → alias"| WMPVC
@@ -284,14 +336,14 @@ flowchart TD
 
 ### Services & Images
 
-| Service            | Image                 | Port | Service-Typ | NodePort |
-| ------------------ | --------------------- | ---- | ----------- | -------- |
-| wger-nginx         | `nginx:stable-alpine` | 80   | NodePort    | 30081    |
-| wger-web           | `wger/server:latest`  | 8000 | ClusterIP   | —        |
-| wger-db            | `postgres:15-alpine`  | 5432 | ClusterIP   | —        |
-| wger-cache         | `redis:7-alpine`      | 6379 | ClusterIP   | —        |
-| wger-celery-worker | `wger/server:latest`  | —    | —           | —        |
-| wger-celery-beat   | `wger/server:latest`  | —    | —           | —        |
+| Service            | Image                 | Port | Service-Typ | Subdomain (Traefik) |
+| ------------------ | --------------------- | ---- | ----------- | ------------------- |
+| wger-nginx         | `nginx:stable-alpine` | 80   | ClusterIP   | `wger.janikhenz.ch` |
+| wger-web           | `wger/server:latest`  | 8000 | ClusterIP   | —                   |
+| wger-db            | `postgres:15-alpine`  | 5432 | ClusterIP   | —                   |
+| wger-cache         | `redis:7-alpine`      | 6379 | ClusterIP   | —                   |
+| wger-celery-worker | `wger/server:latest`  | —    | —           | —                   |
+| wger-celery-beat   | `wger/server:latest`  | —    | —           | —                   |
 
 ---
 
@@ -309,7 +361,8 @@ flowchart LR
     GHCR["ghcr.io/janikhenz/dashboard:latest"]
     GH_HOME["GitHub\nJanikHenz/my-homelab"]
     ARGO["ArgoCD\napps/dashboard.yaml"]
-    POD["nginx Pod\nRaspberry Pi\nNodePort :30080"]
+    POD["nginx Pod\nRaspberry Pi\nClusterIP :80"]
+    TRAEFIK["Traefik\nIngressRoute\njanikhenz.ch"]
 
     DEV -->|git push| GH_DASH
     GH_DASH -->|trigger| GH_ACT
@@ -317,6 +370,7 @@ flowchart LR
     ARGO -->|pull image| GHCR
     GH_HOME -->|sync| ARGO
     ARGO -->|deploy| POD
+    TRAEFIK -->|"Host(janikhenz.ch)"| POD
 ```
 
 ### Details
@@ -325,8 +379,8 @@ flowchart LR
 | ----------- | ------------------------------------------------------------- |
 | Image       | `ghcr.io/janikhenz/dashboard:latest`                          |
 | Node        | `raspberrypi`                                                 |
-| NodePort    | `30080`                                                       |
-| URL         | `http://raspberrypi:30080`                                    |
+| Service-Typ | `ClusterIP`                                                   |
+| URL         | `https://janikhenz.ch`                                        |
 | Source Repo | [JanikHenz/dashboard](https://github.com/JanikHenz/dashboard) |
 
 ---
@@ -391,21 +445,36 @@ flowchart TD
 
 ---
 
-## Port-Übersicht
+## Port-Übersicht & Routing
 
-| Service             | Namespace | Container-Port | NodePort  | URL (Beispiel)                |
-| ------------------- | --------- | -------------- | --------- | ----------------------------- |
-| Jellyfin            | media     | 8096           | **30001** | `http://homeserver:30001`     |
-| Plex                | media     | 32400          | **30002** | `http://homeserver:30002/web` |
-| Jellyseerr          | media     | 5055           | **30003** | `http://homeserver:30003`     |
-| Radarr              | media     | 7878           | **30004** | `http://homeserver:30004`     |
-| Sonarr              | media     | 8989           | **30005** | `http://homeserver:30005`     |
-| Prowlarr            | media     | 9696           | **30006** | `http://homeserver:30006`     |
-| qBittorrent WebUI   | media     | 8080           | **30007** | `http://homeserver:30007`     |
-| qBittorrent Torrent | media     | 6881 TCP/UDP   | **30008** | —                             |
-| FlareSolverr        | media     | 8191           | **30009** | `http://homeserver:30009`     |
-| wger (nginx)        | fitness   | 80             | **30010** | `http://homeserver:30010`     |
-| Dashboard (nginx)   | default   | 80             | **30080** | `http://raspberrypi:30080`    |
+### Öffentlicher Zugang via Traefik IngressRoute
+
+| Service           | Namespace | Container-Port | Service-Typ | Subdomain                         |
+| ----------------- | --------- | -------------- | ----------- | --------------------------------- |
+| Dashboard (nginx) | default   | 80             | ClusterIP   | `https://janikhenz.ch`            |
+| Jellyfin          | media     | 8096           | ClusterIP   | `https://jellyfin.janikhenz.ch`   |
+| Plex              | media     | 32400          | ClusterIP   | `https://plex.janikhenz.ch`       |
+| Jellyseerr        | media     | 5055           | ClusterIP   | `https://jellyseerr.janikhenz.ch` |
+| Radarr            | media     | 7878           | ClusterIP   | `https://radarr.janikhenz.ch`     |
+| Sonarr            | media     | 8989           | ClusterIP   | `https://sonarr.janikhenz.ch`     |
+| Prowlarr          | media     | 9696           | ClusterIP   | `https://prowlarr.janikhenz.ch`   |
+| qBittorrent WebUI | media     | 8080           | ClusterIP   | `https://qbt.janikhenz.ch`        |
+| wger (nginx)      | fitness   | 80             | ClusterIP   | `https://wger.janikhenz.ch`       |
+
+### NodePort (nur Torrent-Protokoll — nicht HTTP-routebar)
+
+| Service                     | Namespace | Port         | NodePort  | Zweck                     |
+| --------------------------- | --------- | ------------ | --------- | ------------------------- |
+| qbittorrent-torrent-service | media     | 6881 TCP/UDP | **30008** | Torrent-Peers (kein HTTP) |
+
+### Interne ClusterIP (kein öffentlicher Zugang)
+
+| Service            | Namespace | Port | Konsumenten      |
+| ------------------ | --------- | ---- | ---------------- |
+| FlareSolverr       | media     | 8191 | Prowlarr         |
+| wger-web-service   | fitness   | 8000 | wger-nginx       |
+| wger-db-service    | fitness   | 5432 | wger-web, celery |
+| wger-cache-service | fitness   | 6379 | wger-web, celery |
 
 ---
 
@@ -437,16 +506,19 @@ my-homelab/
 │   └── nvidia-runtimeclass.yaml  # RuntimeClass: nvidia
 │
 └── manifests/                 # Kubernetes Manifeste pro App
-    ├── dashboard/             # Deployment + Service (nginx)
+    ├── dashboard/
+    │   ├── nginx-dashboard-deployment.yaml
+    │   ├── nginx-dashboard-service.yaml   # ClusterIP
+    │   └── nginx-dashboard-ingressroute.yaml  # janikhenz.ch
     ├── media-stack/
-    │   ├── jellyfin/          # Deployment + Service
+    │   ├── jellyfin/          # Deployment + ClusterIP + IngressRoute
     │   ├── plex/
     │   ├── jellyseerr/
     │   ├── radarr/
     │   ├── sonarr/
     │   ├── prowlarr/
-    │   ├── qbittorrent/
-    │   └── flaresolverr/
+    │   ├── qbittorrent/       # ClusterIP (WebUI) + NodePort (torrent 6881) + IngressRoute
+    │   └── flaresolverr/      # ClusterIP only (intern)
     └── fitness/
-        └── wger/              # 6 Deployments + Services + ConfigMap
+        └── wger/              # 6 Deployments + Services + ConfigMap + IngressRoute
 ```

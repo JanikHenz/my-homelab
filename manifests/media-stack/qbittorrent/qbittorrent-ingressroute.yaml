@@ -1,0 +1,31 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: qbittorrent-ingressroute
+  namespace: media
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`qbt.janikhenz.ch`)
+      kind: Rule
+      services:
+        - name: qbittorrent-service
+          port: 8080
+
+# ⚠️  IMPORTANT: qBittorrent WebUI host header validation
+# When first accessing qbt.janikhenz.ch, qBittorrent may reject requests due
+# to its built-in host header check. You must disable this once in qBittorrent:
+#
+#   Option A (via WebUI — preferred):
+#     Tools → Options → Web UI → "Bypass authentication for clients in whitelist"
+#     AND enable "Use alternative Web UI" is NOT needed, but go to:
+#     Tools → Options → Web UI → uncheck "Enable host header validation"
+#
+#   Option B (directly in config file on the PVC):
+#     /config/qBittorrent/qBittorrent.conf  →  add under [Preferences]:
+#     WebUI\HostHeaderValidation=false
+#
+# The torrent port (6881 TCP/UDP) is exposed separately via NodePort 30008
+# in qbittorrent-torrent-service.yaml — configure this in qBittorrent under:
+#   Tools → Options → Connection → Listening Port = 6881

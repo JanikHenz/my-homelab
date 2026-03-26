@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr-ingressroute
+  namespace: media
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`radarr.janikhenz.ch`)
+      kind: Rule
+      services:
+        - name: radarr-service
+          port: 7878

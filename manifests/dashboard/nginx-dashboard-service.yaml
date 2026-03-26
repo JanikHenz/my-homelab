@@ -2,12 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-dashboard-service
+  namespace: default
 spec:
+  type: ClusterIP
   selector:
     app: nginx-dashboard
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30080
-  type: NodePort

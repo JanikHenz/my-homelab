@@ -4,11 +4,10 @@ metadata:
   name: jellyseerr-service
   namespace: media
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: jellyseerr
   ports:
     - protocol: TCP
       port: 5055
       targetPort: 5055
-      nodePort: 30003

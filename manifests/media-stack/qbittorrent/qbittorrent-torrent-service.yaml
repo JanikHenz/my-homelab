@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-torrent-service
+  namespace: media
+spec:
+  # NodePort is required here: torrent protocol (TCP/UDP raw traffic) cannot
+  # be routed through Traefik's HTTP layer. This NodePort exposes the torrent
+  # listening port directly on the node so peers can connect.
+  type: NodePort
+  selector:
+    app: qbittorrent
+  ports:
+    - name: torrent-tcp
+      port: 6881
+      targetPort: 6881
+      nodePort: 30008
+      protocol: TCP
+    - name: torrent-udp
+      port: 6881
+      targetPort: 6881
+      nodePort: 30008
+      protocol: UDP

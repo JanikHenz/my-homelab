@@ -4,11 +4,10 @@ metadata:
   name: wger-service
   namespace: fitness
 spec:
+  type: ClusterIP
   selector:
     app: wger-nginx
   ports:
     - protocol: TCP
       port: 80
       targetPort: 80
-      nodePort: 30010
-  type: NodePort

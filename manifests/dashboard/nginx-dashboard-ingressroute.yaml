@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-ingressroute
+  namespace: default
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`janikhenz.ch`)
+      kind: Rule
+      services:
+        - name: nginx-dashboard-service
+          port: 80
