@@ -132,7 +132,8 @@ graph LR
     subgraph RASPY["Raspberry Pi (Control Plane)"]
         CP["kube-apiserver\netcd\ncontroller-manager\nscheduler"]
         ARGO["ArgoCD"]
-        CFD["cloudflared"]
+        CFD["cloudflared\n(Tunnel)"]
+        TRAEFIK["Traefik\n(Ingress Controller)\nPort 80"]
     end
 
     subgraph SERVER["Homeserver (Worker Node)"]
@@ -144,16 +145,24 @@ graph LR
             NDP["nvidia-device-plugin"]
         end
         subgraph MEDIA_NS["namespace: media"]
-            MEDIA["Media Stack"]
+            MEDIA["Media Stack\n(ClusterIP Services)"]
         end
         subgraph FITNESS_NS["namespace: fitness"]
-            FITNESS["Fitness Stack"]
+            FITNESS["Fitness Stack\n(ClusterIP Services)"]
+        end
+        subgraph DEFAULT_NS["namespace: default"]
+            DASH["Dashboard\n(ClusterIP Service)"]
         end
     end
 
+    CFD -->|"HTTP Port 80"| TRAEFIK
     CP <-->|"Cluster API"| KW
     ARGO -->|"deploy"| MEDIA_NS
     ARGO -->|"deploy"| FITNESS_NS
+    ARGO -->|"deploy"| DEFAULT_NS
+    TRAEFIK -->|"IngressRoute"| MEDIA_NS
+    TRAEFIK -->|"IngressRoute"| FITNESS_NS
+    TRAEFIK -->|"IngressRoute"| DEFAULT_NS
     GPU --> NDP
     NDP --> MEDIA
     DISK --> MEDIA
@@ -174,15 +183,16 @@ flowchart LR
     APPS["apps/\n*.yaml (ArgoCD Applications)"]
 
     subgraph MANIFESTS["manifests/"]
-        MS["media-stack/\njellyfin, plex, radarr\nsonarr, prowlarr\nqbittorrent, jellyseerr\nflaresolverr"]
-        FS["fitness/wger/\nweb, nginx, db\ncache, celery"]
-        DS["dashboard/\nnginx deployment"]
+        MS["media-stack/\nDeployment + ClusterIP\n+ IngressRoute pro App"]
+        FS["fitness/wger/\nDeployment + ClusterIP\n+ IngressRoute"]
+        DS["dashboard/\nDeployment + ClusterIP\n+ IngressRoute"]
     end
 
     subgraph CLUSTER["homelab Cluster"]
         NS_MEDIA["namespace: media"]
         NS_FITNESS["namespace: fitness"]
         NS_DEFAULT["namespace: default"]
+        TRAEFIK["Traefik\nIngressRoute\n(liest alle Namespaces)"]
     end
 
     DEV -->|git push| GH
@@ -192,6 +202,9 @@ flowchart LR
     MS -->|deploys to| NS_MEDIA
     FS -->|deploys to| NS_FITNESS
     DS -->|deploys to| NS_DEFAULT
+    NS_MEDIA -->|IngressRoute| TRAEFIK
+    NS_FITNESS -->|IngressRoute| TRAEFIK
+    NS_DEFAULT -->|IngressRoute| TRAEFIK
 ```
 
 ### Sync-Policy
@@ -291,9 +304,10 @@ wger ist eine selbst gehostete Fitness-Tracking-Anwendung. Der Stack besteht aus
 ```mermaid
 flowchart TD
     USER["User / Browser"]
+    TRAEFIK["Traefik\nIngressRoute\nwger.janikhenz.ch"]
 
     subgraph FITNESS["namespace: fitness"]
-        WN["wger-nginx\nnginx:stable-alpine\nClusterIP\nReverse Proxy"]
+        WN["wger-nginx\nnginx:stable-alpine\nClusterIP :80\nReverse Proxy"]
 
         subgraph BACKEND["Backend"]
             WW["wger-web\nwger/server:latest\nDjango App :8000"]
@@ -314,7 +328,8 @@ flowchart TD
         end
     end
 
-    USER -->|"|wger.janikhenz.ch"| WN
+    USER -->|"HTTPS"| TRAEFIK
+    TRAEFIK -->|"ClusterIP :80"| WN
     WN -->|"proxy_pass :8000"| WW
     WN -->|"/static/ → alias"| WSPVC
     WN -->|"/media/ → alias"| WMPVC
