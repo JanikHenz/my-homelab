@@ -5,10 +5,11 @@ metadata:
   namespace: media
 spec:
   # WebUI only - torrent ports (6881) are in qbittorrent-torrent-service.yaml
-  type: ClusterIP
+  type: NodePort
   selector:
     app: qbittorrent
   ports:
     - name: webui
       port: 8080
       targetPort: 8080
+      nodePort: 30007

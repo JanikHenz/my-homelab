@@ -4,9 +4,10 @@ metadata:
   name: sonarr-service
   namespace: media
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: sonarr
   ports:
     - port: 8989
       targetPort: 8989
+      nodePort: 30005

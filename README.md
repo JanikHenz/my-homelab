@@ -462,25 +462,27 @@ flowchart TD
 
 ## Port-Übersicht & Routing
 
-### Öffentlicher Zugang via Traefik IngressRoute
+Alle öffentlichen Services sind vom Typ **NodePort** — sie sind damit sowohl **lokal im Heimnetz** (via `http://homeserver:<nodePort>`) als auch **extern** über Traefik + Cloudflare Tunnel (via Subdomain) erreichbar.
 
-| Service           | Namespace | Container-Port | Service-Typ | Subdomain                         |
-| ----------------- | --------- | -------------- | ----------- | --------------------------------- |
-| Dashboard (nginx) | default   | 80             | ClusterIP   | `https://janikhenz.ch`            |
-| Jellyfin          | media     | 8096           | ClusterIP   | `https://jellyfin.janikhenz.ch`   |
-| Plex              | media     | 32400          | ClusterIP   | `https://plex.janikhenz.ch`       |
-| Jellyseerr        | media     | 5055           | ClusterIP   | `https://jellyseerr.janikhenz.ch` |
-| Radarr            | media     | 7878           | ClusterIP   | `https://radarr.janikhenz.ch`     |
-| Sonarr            | media     | 8989           | ClusterIP   | `https://sonarr.janikhenz.ch`     |
-| Prowlarr          | media     | 9696           | ClusterIP   | `https://prowlarr.janikhenz.ch`   |
-| qBittorrent WebUI | media     | 8080           | ClusterIP   | `https://qbt.janikhenz.ch`        |
-| wger (nginx)      | fitness   | 80             | ClusterIP   | `https://wger.janikhenz.ch`       |
+### Öffentlicher Zugang (NodePort + Traefik IngressRoute)
 
-### NodePort (nur Torrent-Protokoll — nicht HTTP-routebar)
+| Service           | Namespace | Container-Port | NodePort  | Lokale URL                        | Externe URL (Traefik)             |
+| ----------------- | --------- | -------------- | --------- | --------------------------------- | --------------------------------- |
+| Dashboard (nginx) | default   | 80             | **30080** | `http://raspberrypi:30080`        | `https://janikhenz.ch`            |
+| Jellyfin          | media     | 8096           | **30001** | `http://homeserver:30001`         | `https://jellyfin.janikhenz.ch`   |
+| Plex              | media     | 32400          | **30002** | `http://homeserver:30002/web`     | `https://plex.janikhenz.ch`       |
+| Jellyseerr        | media     | 5055           | **30003** | `http://homeserver:30003`         | `https://jellyseerr.janikhenz.ch` |
+| Radarr            | media     | 7878           | **30004** | `http://homeserver:30004`         | `https://radarr.janikhenz.ch`     |
+| Sonarr            | media     | 8989           | **30005** | `http://homeserver:30005`         | `https://sonarr.janikhenz.ch`     |
+| Prowlarr          | media     | 9696           | **30006** | `http://homeserver:30006`         | `https://prowlarr.janikhenz.ch`   |
+| qBittorrent WebUI | media     | 8080           | **30007** | `http://homeserver:30007`         | `https://qbt.janikhenz.ch`        |
+| wger (nginx)      | fitness   | 80             | **30010** | `http://homeserver:30010`         | `https://wger.janikhenz.ch`       |
+
+### NodePort (Torrent-Protokoll — kein HTTP, kein Traefik)
 
 | Service                     | Namespace | Port         | NodePort  | Zweck                     |
 | --------------------------- | --------- | ------------ | --------- | ------------------------- |
-| qbittorrent-torrent-service | media     | 6881 TCP/UDP | **30008** | Torrent-Peers (kein HTTP) |
+| qbittorrent-torrent-service | media     | 6881 TCP/UDP | **30008** | Torrent-Peers (Raw TCP/UDP) |
 
 ### Interne ClusterIP (kein öffentlicher Zugang)
 

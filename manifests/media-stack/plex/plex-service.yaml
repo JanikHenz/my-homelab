@@ -4,10 +4,11 @@ metadata:
   name: plex-service
   namespace: media
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: plex
   ports:
     - protocol: TCP
       port: 32400
       targetPort: 32400
+      nodePort: 30002
