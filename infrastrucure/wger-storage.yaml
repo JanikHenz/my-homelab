@@ -1,5 +1,3 @@
-# --- WGER STORAGE ---
-
 # WGER POSTGRES
 apiVersion: v1
 kind: PersistentVolume
@@ -46,7 +44,7 @@ spec:
   resources: { requests: { storage: 1Gi } }
   volumeName: wger-redis-pv
 ---
-# WGER STATIC (ReadWriteMany: wger-web + wger-nginx greifen gleichzeitig zu)
+# WGER STATIC
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -69,7 +67,7 @@ spec:
   resources: { requests: { storage: 2Gi } }
   volumeName: wger-static-pv
 ---
-# WGER MEDIA (ReadWriteMany: wger-web, wger-celery-worker + wger-nginx greifen gleichzeitig zu)
+# WGER MEDIA
 apiVersion: v1
 kind: PersistentVolume
 metadata:

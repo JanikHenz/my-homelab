@@ -1,4 +1,4 @@
-# --- CONFIG STORAGE (GETRENNT) ---
+# --- CONFIG STORAGE ---
 
 # JELLYFIN CONFIG
 apiVersion: v1
@@ -6,7 +6,7 @@ kind: PersistentVolume
 metadata:
   name: jellyfin-config-pv
 spec:
-  storageClassName: "" # Leer lassen für statische Bindung
+  storageClassName: ""
   capacity: { storage: 10Gi }
   accessModes: ["ReadWriteOnce"]
   persistentVolumeReclaimPolicy: Retain
@@ -162,7 +162,7 @@ spec:
   volumeName: jellyseerr-config-pv
 
 
-# --- SHARED MEDIA STORAGE (GEMEINSAM) ---
+# --- SHARED MEDIA STORAGE ---
 
 ---
 apiVersion: v1
@@ -172,14 +172,14 @@ metadata:
 spec:
   storageClassName: ""
   capacity: { storage: 500Gi }
-  accessModes: ["ReadWriteMany"] # Erlaubt Zugriff von vielen Pods gleichzeitig
+  accessModes: ["ReadWriteMany"]
   persistentVolumeReclaimPolicy: Retain
   hostPath: { path: "/mnt/data/media" }
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: global-media-pvc # Ein PVC für beide Apps!
+  name: global-media-pvc
   namespace: media
 spec:
   storageClassName: ""

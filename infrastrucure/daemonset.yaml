@@ -19,37 +19,37 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - "homeserver"
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - "homeserver"
       tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
       priorityClassName: "system-node-critical"
       containers:
-      - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
-        name: nvidia-device-plugin-ctr
-        args:                                            # <--- WICHTIG: Argumente fehlten
-          - "--config-file=/etc/nvidia-plugin/config.yaml"
-        env:
-          - name: FAIL_ON_INIT_ERROR
-            value: "false"
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop: ["ALL"]
-        volumeMounts:
-          - name: device-plugin
-            mountPath: /var/lib/kubelet/device-plugins
-          - name: config                                 # <--- WICHTIG: Mount fehlte
-            mountPath: /etc/nvidia-plugin
+        - image: nvcr.io/nvidia/k8s-device-plugin:v0.18.0
+          name: nvidia-device-plugin-ctr
+          args:
+            - "--config-file=/etc/nvidia-plugin/config.yaml"
+          env:
+            - name: FAIL_ON_INIT_ERROR
+              value: "false"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: config
+              mountPath: /etc/nvidia-plugin
       volumes:
         - name: device-plugin
           hostPath:
             path: /var/lib/kubelet/device-plugins
-        - name: config                                   # <--- WICHTIG: Volume fehlte
+        - name: config
           configMap:
             name: nvidia-plugin-configs

@@ -19,4 +19,4 @@ data:
         renameByDefault: false
         resources:
         - name: nvidia.com/gpu
-          replicas: 2
+          replicas: 5
