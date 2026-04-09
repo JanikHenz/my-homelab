@@ -35,11 +35,11 @@ spec:
               mountPath: /app/config
           resources:
             requests:
-              cpu: 100m
-              memory: 256Mi
-            limits:
-              cpu: 300m
+              cpu: 200m
               memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
       volumes:
         - name: config-storage
           persistentVolumeClaim:
