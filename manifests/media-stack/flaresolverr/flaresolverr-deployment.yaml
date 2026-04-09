@@ -29,8 +29,8 @@ spec:
             - containerPort: 8191
           resources:
             requests:
-                cpu: 500m
-                memory: 512Mi
-              limits:
-                cpu: 2000m
-                memory: 1500Mi
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 2000m
+              memory: 1500Mi
