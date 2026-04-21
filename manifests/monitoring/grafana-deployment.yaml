@@ -19,8 +19,15 @@ spec:
         kubernetes.io/hostname: homeserver
       securityContext:
         fsGroup: 472
-        runAsUser: 472
-        runAsNonRoot: true
+      initContainers:
+        - name: fix-permissions
+          image: busybox:latest
+          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/grafana
       containers:
         - name: grafana
           image: grafana/grafana:latest
@@ -34,6 +41,9 @@ spec:
               value: "changeme"
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
+          securityContext:
+            runAsUser: 472
+            runAsNonRoot: true
           volumeMounts:
             - name: data
               mountPath: /var/lib/grafana
