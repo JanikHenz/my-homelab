@@ -19,7 +19,7 @@ data:
             "name": "node",
             "label": "Node",
             "type": "query",
-            "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+            "datasource": { "type": "prometheus", "uid": "prometheus" },
             "query": "label_values(node_uname_info, nodename)",
             "refresh": 2,
             "multi": false,
@@ -35,7 +35,7 @@ data:
           "type": "stat",
           "title": "CPU Usage",
           "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "colorMode": "background",
             "graphMode": "area",
@@ -69,7 +69,7 @@ data:
           "type": "stat",
           "title": "Memory Usage",
           "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "colorMode": "background",
             "graphMode": "area",
@@ -103,7 +103,7 @@ data:
           "type": "stat",
           "title": "Disk Usage (/)",
           "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "colorMode": "background",
             "graphMode": "none",
@@ -137,7 +137,7 @@ data:
           "type": "stat",
           "title": "Uptime",
           "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "colorMode": "value",
             "graphMode": "none",
@@ -161,7 +161,7 @@ data:
           "type": "timeseries",
           "title": "CPU Usage per Node",
           "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "tooltip": { "mode": "multi" },
             "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }
@@ -186,7 +186,7 @@ data:
           "type": "timeseries",
           "title": "Memory Usage per Node",
           "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "tooltip": { "mode": "multi" },
             "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }
@@ -213,7 +213,7 @@ data:
           "type": "timeseries",
           "title": "Network Traffic",
           "gridPos": { "x": 0, "y": 12, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "tooltip": { "mode": "multi" },
             "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean"] }
@@ -240,7 +240,7 @@ data:
           "type": "timeseries",
           "title": "System Load Average",
           "gridPos": { "x": 12, "y": 12, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "tooltip": { "mode": "multi" },
             "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull"] }
@@ -270,7 +270,7 @@ data:
           "type": "timeseries",
           "title": "Disk I/O",
           "gridPos": { "x": 0, "y": 20, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "tooltip": { "mode": "multi" },
             "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "mean"] }
@@ -297,7 +297,7 @@ data:
           "type": "table",
           "title": "Node Info",
           "gridPos": { "x": 12, "y": 20, "w": 12, "h": 8 },
-          "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
           "options": {
             "footer": { "show": false }
           },
@@ -325,16 +325,5 @@ data:
             }
           ]
         }
-      ],
-      "__inputs": [
-        {
-          "name": "DS_PROMETHEUS",
-          "label": "Prometheus",
-          "type": "datasource",
-          "pluginId": "prometheus"
-        }
-      ],
-      "__requires": [
-        { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
       ]
     }
