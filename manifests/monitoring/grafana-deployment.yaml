@@ -24,7 +24,7 @@ spec:
       initContainers:
         - name: fix-permissions
           image: busybox:latest
-          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
+          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana && rm -f /var/lib/grafana/grafana.db"]
           securityContext:
             runAsUser: 0
           volumeMounts:
