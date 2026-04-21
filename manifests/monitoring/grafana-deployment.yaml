@@ -24,7 +24,7 @@ spec:
       initContainers:
         - name: fix-permissions
           image: busybox:latest
-          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana && rm -f /var/lib/grafana/grafana.db"]
+          command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
           securityContext:
             runAsUser: 0
           volumeMounts:
@@ -74,7 +74,7 @@ spec:
             httpGet:
               path: /api/health
               port: 3000
-            initialDelaySeconds: 120
+            initialDelaySeconds: 180
             periodSeconds: 15
             failureThreshold: 5
       volumes:
