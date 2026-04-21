@@ -48,10 +48,10 @@ spec:
             - name: data
               mountPath: /var/lib/grafana
             - name: provisioning
-              mountPath: /etc/grafana/provisioning/datasources
+              mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               subPath: datasources.yaml
             - name: provisioning
-              mountPath: /etc/grafana/provisioning/dashboards
+              mountPath: /etc/grafana/provisioning/dashboards/dashboards.yaml
               subPath: dashboards.yaml
             - name: dashboards
               mountPath: /etc/grafana/dashboards
