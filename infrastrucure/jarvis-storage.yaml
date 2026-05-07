@@ -1,0 +1,22 @@
+# OLLAMA CONFIG (models + configuration)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ollama-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 50Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/ollama/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-config-pvc
+  namespace: jarvis
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 50Gi } }
+  volumeName: ollama-config-pv

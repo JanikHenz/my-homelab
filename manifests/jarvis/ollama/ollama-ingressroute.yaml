@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ollama-ingressroute
+  namespace: jarvis
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`ollama.janikhenz.ch`)
+      kind: Rule
+      services:
+        - name: ollama-service
+          port: 11434

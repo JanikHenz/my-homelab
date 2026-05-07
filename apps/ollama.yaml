@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/janikhenz/my-homelab.git
+    targetRevision: HEAD
+    path: manifests/jarvis/ollama
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: jarvis
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
