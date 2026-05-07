@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: piper-deployment
+  namespace: jarvis
+  labels:
+    app: piper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: piper
+  template:
+    metadata:
+      labels:
+        app: piper
+    spec:
+      containers:
+        - name: piper
+          image: rhasspy/wyoming-piper:latest
+          args:
+            - "--voice"
+            - "de_DE-thorsten-medium"
+          ports:
+            - containerPort: 10200
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi

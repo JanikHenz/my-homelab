@@ -1,3 +1,26 @@
+# CHROMADB DATA
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: chromadb-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/chromadb" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: chromadb-pvc
+  namespace: jarvis
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: chromadb-pv
+---
 # OLLAMA CONFIG (models + configuration)
 apiVersion: v1
 kind: PersistentVolume
