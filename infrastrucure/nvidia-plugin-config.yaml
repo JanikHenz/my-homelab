@@ -12,5 +12,5 @@ data:
       nvidiaDriverRoot: "/"
       plugin:
         passDeviceSpecs: false
-        deviceListStrategy: envvar
+        deviceListStrategy: cdi
         deviceIDStrategy: uuid
