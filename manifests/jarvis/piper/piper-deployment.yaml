@@ -15,6 +15,8 @@ spec:
       labels:
         app: piper
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
       containers:
         - name: piper
           image: rhasspy/wyoming-piper:latest
