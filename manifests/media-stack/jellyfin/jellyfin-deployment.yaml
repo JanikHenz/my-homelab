@@ -18,6 +18,11 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      runtimeClassName: nvidia
       containers:
         - name: jellyfin
           image: jellyfin/jellyfin:latest
@@ -30,6 +35,7 @@ spec:
             limits:
               cpu: 2000m
               memory: 4Gi
+              nvidia.com/gpu: "1"
           volumeMounts:
             - name: config
               mountPath: /config

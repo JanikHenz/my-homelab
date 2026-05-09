@@ -1,6 +1,6 @@
 # My Homelab
 
-Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust + **Traefik Ingress** für externen Zugriff, NVIDIA GPU-Unterstützung sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
+Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust + **Traefik Ingress** für externen Zugriff, NVIDIA GPU-Unterstützung für Jellyfin sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
 
 ---
 
@@ -16,6 +16,7 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 - [Dashboard](#dashboard)
 - [Storage-Übersicht](#storage-übersicht)
 - [NVIDIA GPU](#nvidia-gpu)
+- [Jarvis Architektur](#jarvis-architektur)
 - [Port-Übersicht](#port-übersicht)
 - [Verzeichnisstruktur](#verzeichnisstruktur)
 
@@ -82,7 +83,7 @@ graph TD
             DISK["/mnt/data/"]
 
             subgraph NS_MEDIA["namespace: media"]
-                MEDIA_APPS["Jellyfin · Plex · Jellyseerr\nRadarr · Sonarr · Prowlarr\nqBittorrent · FlareSolverr"]
+                MEDIA_APPS["Jellyfin (GPU) · Plex · Jellyseerr\nRadarr · Sonarr · Prowlarr\nqBittorrent · FlareSolverr"]
             end
             subgraph NS_FITNESS["namespace: fitness"]
                 FITNESS_APPS["wger (nginx · web · db · cache · celery)"]
@@ -104,7 +105,7 @@ graph TD
     ARGO -->|"sync manifests"| NS_MEDIA
     ARGO -->|"sync manifests"| NS_FITNESS
     GH -->|"pull"| ARGO
-    GPU --> NS_MEDIA
+    GPU --> MEDIA_APPS
     DISK --> NS_MEDIA
     DISK --> NS_FITNESS
 ```
@@ -138,7 +139,7 @@ graph LR
 
     subgraph SERVER["Homeserver (Worker Node)"]
         KW["kubelet"]
-        GPU["NVIDIA GPU\n(Time-Slicing 2×)"]
+        GPU["NVIDIA GPU\n(Jellyfin Transcoding)"]
         DISK["/mnt/data/"]
 
         subgraph SYS["kube-system"]
@@ -229,8 +230,8 @@ flowchart TD
 
     subgraph FRONTEND["Frontend (Zugriff)"]
         JS["Jellyseerr\njellyseerr.janikhenz.ch\nRequest Management"]
-        JF["Jellyfin\njellyfin.janikhenz.ch\n GPU\nMedia Server"]
-        PL["Plex\nplex.janikhenz.ch\n GPU\nMedia Server"]
+        JF["Jellyfin\njellyfin.janikhenz.ch\nGPU\nMedia Server"]
+        PL["Plex\nplex.janikhenz.ch\nMedia Server"]
     end
 
     subgraph AUTOMATION["Automation (*arr)"]
@@ -283,7 +284,7 @@ flowchart TD
 | Service      | Image                                      | Port  | Service-Typ | Subdomain (Traefik)           | GPU  |
 | ------------ | ------------------------------------------ | ----- | ----------- | ----------------------------- | ---- |
 | Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | ClusterIP   | `jellyfin.janikhenz.ch`       | true |
-| Plex         | `plexinc/pms-docker:latest`                | 32400 | ClusterIP   | `plex.janikhenz.ch`           | true |
+| Plex         | `plexinc/pms-docker:latest`                | 32400 | ClusterIP   | `plex.janikhenz.ch`           |      |
 | Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | ClusterIP   | `jellyseerr.janikhenz.ch`     |      |
 | Radarr       | `linuxserver/radarr:latest`                | 7878  | ClusterIP   | `radarr.janikhenz.ch`         |      |
 | Sonarr       | `linuxserver/sonarr:latest`                | 8989  | ClusterIP   | `sonarr.janikhenz.ch`         |      |
@@ -421,12 +422,12 @@ flowchart LR
 
 ## NVIDIA GPU
 
-Die GPU wird über den **NVIDIA Device Plugin** bereitgestellt und via **Time-Slicing** auf 2 virtuelle Slots aufgeteilt. Sowohl Jellyfin als auch Plex können gleichzeitig Hardware-Transcoding nutzen.
+Die GPU wird über den **NVIDIA Device Plugin** bereitgestellt und aktuell exklusiv von Jellyfin für Hardware-Transcoding genutzt.
 
 ```mermaid
 flowchart TD
     subgraph KUBE_SYSTEM["kube-system"]
-        CM["ConfigMap\nnvidia-plugin-configs\ntimeSlicing replicas: 2"]
+        CM["ConfigMap\nnvidia-plugin-configs"]
         RC["RuntimeClass\nnvidia"]
         DS["DaemonSet\nnvidia-device-plugin\nnvcr.io/nvidia/k8s-device-plugin:v0.18.0\nnodeSelector: homeserver"]
         DS -->|"--config-file"| CM
@@ -435,20 +436,16 @@ flowchart TD
 
     subgraph NODE["Node: homeserver"]
         GPU_HW["Physische NVIDIA GPU"]
-        SLOT1["Virtueller Slot 1"]
-        SLOT2["Virtueller Slot 2"]
+        SLOT1["GPU-Zuweisung"]
         GPU_HW --> SLOT1
-        GPU_HW --> SLOT2
     end
 
     subgraph MEDIA["namespace: media"]
         JF["Jellyfin\nnvidia.com/gpu: 1\nruntimeClassName: nvidia"]
-        PL["Plex\nnvidia.com/gpu: 1\nruntimeClassName: nvidia"]
     end
 
     DS --> GPU_HW
     SLOT1 --> JF
-    SLOT2 --> PL
 ```
 
 **Konfiguration (nvidia-plugin-configs):**
@@ -456,7 +453,15 @@ flowchart TD
 - `migStrategy: none`
 - `deviceListStrategy: envvar`
 - `deviceIDStrategy: uuid`
-- `timeSlicing.replicas: 2`
+- `nvidia.com/gpu` wird aktuell nur von Jellyfin angefordert
+
+---
+
+## Jarvis Architektur
+
+Die technische Zielarchitektur fuer den Jarvis-Stack (Ollama, Whisper, Piper, ChromaDB), Betriebsregeln, Recovery-Runbook und Continue.dev-Setup findest du in:
+
+- [`docs/jarvis-architecture.md`](docs/jarvis-architecture.md)
 
 ---
 
