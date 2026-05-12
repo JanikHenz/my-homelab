@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nextcloud
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    targetRevision: HEAD
+    path: manifests/nextcloud
+  destination:
+    name: homelab
+    namespace: nextcloud
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

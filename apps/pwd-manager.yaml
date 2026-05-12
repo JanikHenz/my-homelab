@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pwd-manager
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    targetRevision: HEAD
+    path: manifests/pwd-manager
+  destination:
+    name: homelab
+    namespace: vaultwarden
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
