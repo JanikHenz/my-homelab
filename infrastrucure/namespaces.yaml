@@ -20,3 +20,21 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: jarvis
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: home-assistant
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nextcloud
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: vaultwarden

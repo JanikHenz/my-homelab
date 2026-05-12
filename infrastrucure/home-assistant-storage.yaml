@@ -1,0 +1,22 @@
+# HOME ASSISTANT CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: home-assistant-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/home-assistant/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: home-assistant-config-pvc
+  namespace: home-assistant
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: home-assistant-config-pv
