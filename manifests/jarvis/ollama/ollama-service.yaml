@@ -4,10 +4,11 @@ metadata:
   name: ollama-service
   namespace: jarvis
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: ollama
   ports:
     - protocol: TCP
       port: 11434
       targetPort: 11434
+      nodePort: 30013
