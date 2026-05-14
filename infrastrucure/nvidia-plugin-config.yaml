@@ -12,5 +12,11 @@ data:
       nvidiaDriverRoot: "/"
       plugin:
         passDeviceSpecs: false
-        deviceListStrategy: cdi
+        deviceListStrategy: envvar
         deviceIDStrategy: uuid
+    sharing:
+      timeSlicing:
+        renameByDefault: false
+        resources:
+        - name: nvidia.com/gpu
+          replicas: 4
