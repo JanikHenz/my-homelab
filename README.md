@@ -1,6 +1,20 @@
 # My Homelab
 
-Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust + **Traefik Ingress** für externen Zugriff, NVIDIA GPU-Unterstützung für Jellyfin sowie drei Applikations-Stacks: **Media**, **Fitness** und **Dashboard**.
+Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Raspberry Pi als Control Plane + Homeserver als Worker Node) mit GitOps-Deployment via ArgoCD, Cloudflare Zero Trust + **Traefik Ingress** für externen Zugriff, NVIDIA GPU-Unterstützung für Jellyfin und Ollama sowie mehrere Applikations-Stacks.
+
+**Stacks im Überblick**
+
+
+| Stack            | Namespace        | Kurzbeschreibung                                   |
+| ---------------- | ---------------- | -------------------------------------------------- |
+| Media            | `media`          | Jellyfin, Plex, *arr, qBittorrent, FlareSolverr    |
+| Jarvis           | `jarvis`         | Ollama (LLM), Whisper (STT), Piper (TTS), ChromaDB |
+| Monitoring       | `monitoring`     | Prometheus, Grafana, node-exporter, DCGM Exporter  |
+| Home Assistant   | `home-assistant` | Smart Home                                         |
+| Nextcloud        | `nextcloud`      | Dateiablage                                        |
+| Passwort-Manager | `vaultwarden`    | Vaultwarden (Bitwarden-kompatibel)                 |
+| Dashboard        | `default`        | Zentrales Homelab-Dashboard (nginx auf dem Pi)     |
+
 
 ---
 
@@ -12,13 +26,18 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 - [GitOps-Architektur](#gitops-architektur)
 - [Namespaces & Stacks](#namespaces--stacks)
 - [Media Stack](#media-stack)
-- [Fitness Stack (wger)](#fitness-stack-wger)
+- [Jarvis Stack](#jarvis-stack)
+- [Monitoring Stack](#monitoring-stack)
+- [Home Assistant](#home-assistant)
+- [Nextcloud](#nextcloud)
+- [Vaultwarden](#vaultwarden)
 - [Dashboard](#dashboard)
 - [Storage-Übersicht](#storage-übersicht)
 - [NVIDIA GPU](#nvidia-gpu)
-- [Jarvis Architektur](#jarvis-architektur)
+- [Jarvis Architektur (Detail)](#jarvis-architektur-detail)
 - [Port-Übersicht](#port-übersicht)
 - [Verzeichnisstruktur](#verzeichnisstruktur)
+- [TODO](#todo)
 
 ---
 
@@ -26,41 +45,53 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 
 ### ArgoCD — GitOps Dashboard
 
-| ArgoCD Übersicht                                   | Repository Sync                            |
-| -------------------------------------------------- | ------------------------------------------ |
-| ![ArgoCD Dashboard](docs/img/argocd_dashboard.png) | ![ArgoCD Repos](docs/img/argocd_repos.png) |
+
+| ArgoCD Übersicht | Repository Sync |
+| ---------------- | --------------- |
+| ArgoCD Dashboard | ArgoCD Repos    |
+
 
 ### Kubernetes Cluster
 
-| Pods                                             | Deployments                                                   |
-| ------------------------------------------------ | ------------------------------------------------------------- |
-| ![Kubernetes Pods](docs/img/kubernetes_pods.png) | ![Kubernetes Deployments](docs/img/kubernetes_deployment.png) |
 
-| Services                                            | Persistent Volumes                |
-| --------------------------------------------------- | --------------------------------- |
-| ![Kubernetes Services](docs/img/kubernetes_svc.png) | ![PV](docs/img/kubernetes_pv.png) |
+| Pods            | Deployments            |
+| --------------- | ---------------------- |
+| Kubernetes Pods | Kubernetes Deployments |
 
-| PersistentVolumeClaims               |
-| ------------------------------------ |
-| ![PVCs](docs/img/kubernetes_pvc.png) |
+
+
+| Services            | Persistent Volumes |
+| ------------------- | ------------------ |
+| Kubernetes Services | PV                 |
+
+
+
+| PersistentVolumeClaims |
+| ---------------------- |
+| PVCs                   |
+
 
 ### Cloudflare Zero Trust
 
-| Access Dashboard                                     |
-| ---------------------------------------------------- |
-| ![Cloudflare Access](docs/img/cloudflare_access.png) |
+
+| Access Dashboard  |
+| ----------------- |
+| Cloudflare Access |
+
 
 ### Apps
 
-| Dashboard                                 | Jellyfin Media                           | Plex Media                       |
-| ----------------------------------------- | ---------------------------------------- | -------------------------------- |
-| ![Dashboard](docs/img/dashboard_apps.png) | ![Jellyfin](docs/img/jellyfin_media.png) | ![Plex](docs/img/pelx_media.png) |
+
+| Dashboard | Jellyfin Media | Plex Media |
+| --------- | -------------- | ---------- |
+| Dashboard | Jellyfin       | Plex       |
+
 
 ---
 
 ## Netzwerk-Topologie
 
-Beide Nodes sind direkt am Router im Heimnetz angeschlossen. Der **Raspberry Pi** fungiert als Kubernetes Control Plane und hostet ArgoCD sowie den `cloudflared`-Tunnel für externen Zugriff via **Cloudflare Zero Trust**. Traffic von außen geht durch den Cloudflare Tunnel auf **Traefik** (Port 80), der dann anhand des Host-Headers per `IngressRoute` an den jeweiligen ClusterIP-Service weiterleitet. Der **Homeserver** ist der einzige Worker Node und führt alle Workloads aus.
+Beide Nodes sind direkt am Router im Heimnetz angeschlossen. Der **Raspberry Pi** fungiert als Kubernetes Control Plane und hostet ArgoCD, den `cloudflared`-Tunnel für externen Zugriff via **Cloudflare Zero Trust** sowie Vaultwarden und das Dashboard. Traffic von außen geht durch den Cloudflare Tunnel auf **Traefik** (Port 80), der dann anhand des Host-Headers per `IngressRoute` an den jeweiligen Service weiterleitet. Der **Homeserver** ist der einzige Worker Node und führt die meisten Workloads inkl. GPU-lastiger Apps aus.
 
 ```mermaid
 graph TD
@@ -71,22 +102,33 @@ graph TD
         ROUTER["Router"]
 
         subgraph RASPY["Raspberry Pi\n(Control Plane)"]
-            K8S_CP["Kubernetes\nControl Plane\n(kube-apiserver, etcd, ...)"]
+            K8S_CP["Kubernetes\nControl Plane"]
             ARGO["ArgoCD"]
             CFD["cloudflared\n(Tunnel)"]
-            TRAEFIK["Traefik\n(Ingress Controller)\nPort 80"]
+            TRAEFIK["Traefik\nPort 80"]
+            DASH["Dashboard"]
+            VW["Vaultwarden"]
         end
 
         subgraph SERVER["Homeserver\n(Worker Node)"]
-            K8S_W["Kubernetes\nWorker (kubelet)"]
+            K8S_W["Kubernetes Worker"]
             GPU["NVIDIA GPU"]
             DISK["/mnt/data/"]
 
             subgraph NS_MEDIA["namespace: media"]
-                MEDIA_APPS["Jellyfin (GPU) · Plex · Jellyseerr\nRadarr · Sonarr · Prowlarr\nqBittorrent · FlareSolverr"]
+                MEDIA_APPS["Jellyfin · Plex · Jellyseerr\nRadarr · Sonarr · Prowlarr\nqBittorrent · FlareSolverr"]
             end
-            subgraph NS_FITNESS["namespace: fitness"]
-                FITNESS_APPS["wger (nginx · web · db · cache · celery)"]
+            subgraph NS_JARVIS["namespace: jarvis"]
+                JARVIS_APPS["Ollama · Whisper · Piper · ChromaDB"]
+            end
+            subgraph NS_MON["namespace: monitoring"]
+                MON_APPS["Prometheus · Grafana\nnode-exporter · dcgm-exporter"]
+            end
+            subgraph NS_HA["namespace: home-assistant"]
+                HA["Home Assistant"]
+            end
+            subgraph NS_NC["namespace: nextcloud"]
+                NC["Nextcloud"]
             end
         end
     end
@@ -96,19 +138,33 @@ graph TD
     INET <-->|"Cloudflare Tunnel"| CF
     CF <-->|"outbound tunnel"| CFD
     CFD -->|"HTTP Port 80"| TRAEFIK
-    TRAEFIK -->|"IngressRoute → ClusterIP"| NS_MEDIA
-    TRAEFIK -->|"IngressRoute → ClusterIP"| NS_FITNESS
+    TRAEFIK --> NS_MEDIA
+    TRAEFIK --> NS_JARVIS
+    TRAEFIK --> NS_MON
+    TRAEFIK --> NS_HA
+    TRAEFIK --> NS_NC
+    TRAEFIK --> DASH
+    TRAEFIK --> VW
     CFD --- ARGO
     ROUTER --- RASPY
     ROUTER --- SERVER
     K8S_CP <-->|"Cluster API"| K8S_W
-    ARGO -->|"sync manifests"| NS_MEDIA
-    ARGO -->|"sync manifests"| NS_FITNESS
+    ARGO -->|"sync"| NS_MEDIA
+    ARGO -->|"sync"| NS_JARVIS
+    ARGO -->|"sync"| NS_MON
+    ARGO -->|"sync"| NS_HA
+    ARGO -->|"sync"| NS_NC
     GH -->|"pull"| ARGO
     GPU --> MEDIA_APPS
+    GPU --> JARVIS_APPS
     DISK --> NS_MEDIA
-    DISK --> NS_FITNESS
+    DISK --> NS_JARVIS
+    DISK --> NS_MON
+    DISK --> NS_HA
+    DISK --> NS_NC
 ```
+
+
 
 ---
 
@@ -116,59 +172,88 @@ graph TD
 
 ### Raspberry Pi – Control Plane
 
-| Eigenschaft | Wert                            |
-| ----------- | ------------------------------- |
-| Rolle       | Kubernetes Control Plane        |
-| Software    | Kubernetes, ArgoCD, cloudflared |
+
+| Eigenschaft | Wert                                                 |
+| ----------- | ---------------------------------------------------- |
+| Rolle       | Kubernetes Control Plane                             |
+| Software    | Kubernetes, ArgoCD, cloudflared, Traefik             |
+| Workloads   | Dashboard, Vaultwarden (`nodeSelector: raspberrypi`) |
+
 
 ### Homeserver – Worker Node
 
-| Eigenschaft | Wert                   |
-| ----------- | ---------------------- |
-| Hostname    | `homeserver`           |
-| Rolle       | Kubernetes Worker Node |
+
+| Eigenschaft | Wert                                     |
+| ----------- | ---------------------------------------- |
+| Hostname    | `homeserver`                             |
+| Rolle       | Kubernetes Worker Node                   |
+| GPU         | NVIDIA (Jellyfin, Ollama, dcgm-exporter) |
+| Storage     | `/mnt/data/` (hostPath PVs)              |
+
 
 ```mermaid
 graph LR
     subgraph RASPY["Raspberry Pi (Control Plane)"]
-        CP["kube-apiserver\netcd\ncontroller-manager\nscheduler"]
+        CP["kube-apiserver\netcd\nscheduler"]
         ARGO["ArgoCD"]
-        CFD["cloudflared\n(Tunnel)"]
-        TRAEFIK["Traefik\n(Ingress Controller)\nPort 80"]
+        CFD["cloudflared"]
+        TRAEFIK["Traefik"]
+        DASH["Dashboard"]
+        VW["Vaultwarden"]
     end
 
     subgraph SERVER["Homeserver (Worker Node)"]
         KW["kubelet"]
-        GPU["NVIDIA GPU\n(Jellyfin Transcoding)"]
+        GPU["NVIDIA GPU"]
         DISK["/mnt/data/"]
 
         subgraph SYS["kube-system"]
             NDP["nvidia-device-plugin"]
         end
         subgraph MEDIA_NS["namespace: media"]
-            MEDIA["Media Stack\n(ClusterIP Services)"]
+            MEDIA["Media Stack"]
         end
-        subgraph FITNESS_NS["namespace: fitness"]
-            FITNESS["Fitness Stack\n(ClusterIP Services)"]
+        subgraph JARVIS_NS["namespace: jarvis"]
+            JARVIS["Jarvis Stack"]
         end
-        subgraph DEFAULT_NS["namespace: default"]
-            DASH["Dashboard\n(ClusterIP Service)"]
+        subgraph MON_NS["namespace: monitoring"]
+            MON["Monitoring Stack"]
+        end
+        subgraph HA_NS["namespace: home-assistant"]
+            HA["Home Assistant"]
+        end
+        subgraph NC_NS["namespace: nextcloud"]
+            NC["Nextcloud"]
         end
     end
 
-    CFD -->|"HTTP Port 80"| TRAEFIK
+    CFD --> TRAEFIK
     CP <-->|"Cluster API"| KW
-    ARGO -->|"deploy"| MEDIA_NS
-    ARGO -->|"deploy"| FITNESS_NS
-    ARGO -->|"deploy"| DEFAULT_NS
-    TRAEFIK -->|"IngressRoute"| MEDIA_NS
-    TRAEFIK -->|"IngressRoute"| FITNESS_NS
-    TRAEFIK -->|"IngressRoute"| DEFAULT_NS
+    ARGO --> MEDIA_NS
+    ARGO --> JARVIS_NS
+    ARGO --> MON_NS
+    ARGO --> HA_NS
+    ARGO --> NC_NS
+    ARGO --> DASH
+    ARGO --> VW
+    TRAEFIK --> MEDIA_NS
+    TRAEFIK --> JARVIS_NS
+    TRAEFIK --> MON_NS
+    TRAEFIK --> HA_NS
+    TRAEFIK --> NC_NS
+    TRAEFIK --> DASH
+    TRAEFIK --> VW
     GPU --> NDP
     NDP --> MEDIA
+    NDP --> JARVIS
     DISK --> MEDIA
-    DISK --> FITNESS
+    DISK --> JARVIS
+    DISK --> MON
+    DISK --> HA
+    DISK --> NC
 ```
+
+
 
 ---
 
@@ -180,186 +265,249 @@ Das Deployment folgt dem **App of Apps**-Pattern. ArgoCD überwacht das GitHub-R
 flowchart LR
     DEV["Developer\nPush to GitHub"]
     GH["GitHub\nJanikHenz/my-homelab"]
-    ROOT["root-app\nbootstrap/root-app.yaml\nwatches: apps/"]
-    APPS["apps/\n*.yaml (ArgoCD Applications)"]
+    ROOT["root-app\nbootstrap/root-app.yaml"]
+    APPS["apps/\n*.yaml"]
 
     subgraph MANIFESTS["manifests/"]
-        MS["media-stack/\nDeployment + ClusterIP\n+ IngressRoute pro App"]
-        FS["fitness/wger/\nDeployment + ClusterIP\n+ IngressRoute"]
-        DS["dashboard/\nDeployment + ClusterIP\n+ IngressRoute"]
+        MS["media-stack/"]
+        JV["jarvis/"]
+        MO["monitoring/"]
+        HA["home-assistant/"]
+        NC["nextcloud/"]
+        PW["pwd-manager/"]
+        DS["dashboard/"]
     end
 
     subgraph CLUSTER["homelab Cluster"]
-        NS_MEDIA["namespace: media"]
-        NS_FITNESS["namespace: fitness"]
-        NS_DEFAULT["namespace: default"]
-        TRAEFIK["Traefik\nIngressRoute\n(liest alle Namespaces)"]
+        NS_MEDIA["media"]
+        NS_JARVIS["jarvis"]
+        NS_MON["monitoring"]
+        NS_HA["home-assistant"]
+        NS_NC["nextcloud"]
+        NS_VW["vaultwarden"]
+        NS_DEF["default"]
+        TRAEFIK["Traefik IngressRoute"]
     end
 
     DEV -->|git push| GH
     GH -->|sync| ROOT
-    ROOT -->|creates| APPS
-    APPS -->|points to| MANIFESTS
-    MS -->|deploys to| NS_MEDIA
-    FS -->|deploys to| NS_FITNESS
-    DS -->|deploys to| NS_DEFAULT
-    NS_MEDIA -->|IngressRoute| TRAEFIK
-    NS_FITNESS -->|IngressRoute| TRAEFIK
-    NS_DEFAULT -->|IngressRoute| TRAEFIK
+    ROOT --> APPS
+    APPS --> MANIFESTS
+    MS --> NS_MEDIA
+    JV --> NS_JARVIS
+    MO --> NS_MON
+    HA --> NS_HA
+    NC --> NS_NC
+    PW --> NS_VW
+    DS --> NS_DEF
+    NS_MEDIA --> TRAEFIK
+    NS_JARVIS --> TRAEFIK
+    NS_MON --> TRAEFIK
+    NS_HA --> TRAEFIK
+    NS_NC --> TRAEFIK
+    NS_VW --> TRAEFIK
+    NS_DEF --> TRAEFIK
 ```
+
+
 
 ### Sync-Policy
 
 Alle ArgoCD Applications haben:
 
-- **`automated.prune: true`** – verwaiste Ressourcen werden gelöscht
-- **`automated.selfHeal: true`** – manuelle Änderungen am Cluster werden revertiert (nur root-app)
+- `**automated.prune: true**` – verwaiste Ressourcen werden gelöscht
+- `**automated.selfHeal: true**` – manuelle Cluster-Änderungen werden revertiert (nur root-app)
+
+---
+
+## Namespaces & Stacks
+
+
+| Namespace        | ArgoCD Apps                                                                     | Beschreibung                            |
+| ---------------- | ------------------------------------------------------------------------------- | --------------------------------------- |
+| `media`          | jellyfin, plex, jellyseerr, radarr, sonarr, prowlarr, qbittorrent, flaresolverr | Medien-Automation und Streaming         |
+| `jarvis`         | ollama, whisper, piper, chromadb                                                | Lokales LLM, Sprache und Vektorspeicher |
+| `monitoring`     | monitoring (Prometheus, Grafana, Exporter)                                      | Metriken und Dashboards                 |
+| `home-assistant` | home-assistant                                                                  | Smart Home                              |
+| `nextcloud`      | nextcloud                                                                       | Cloud-Speicher                          |
+| `vaultwarden`    | pwd-manager                                                                     | Passwort-Tresor                         |
+| `default`        | dashboard                                                                       | Homelab-Startseite                      |
+
 
 ---
 
 ## Media Stack
 
-Der Media Stack automatisiert das gesamte Medien-Management: von der Suche über den Download bis zur Wiedergabe.
+Der Media Stack automatisiert das gesamte Medien-Management von der Suche über den Download bis zur Wiedergabe.
 
 ### Datenfluss
 
 ```mermaid
 flowchart TD
     USER["User / Browser"]
-    TRAEFIK["Traefik\nIngressRoute\n(via Cloudflare Tunnel)"]
+    TRAEFIK["Traefik\nIngressRoute"]
 
-    subgraph FRONTEND["Frontend (Zugriff)"]
-        JS["Jellyseerr\njellyseerr.janikhenz.ch\nRequest Management"]
-        JF["Jellyfin\njellyfin.janikhenz.ch\nGPU\nMedia Server"]
-        PL["Plex\nplex.janikhenz.ch\nMedia Server"]
+    subgraph FRONTEND["Frontend"]
+        JS["Jellyseerr\njellyseerr.janikhenz.ch"]
+        JF["Jellyfin\njellyfin.janikhenz.ch\nGPU"]
+        PL["Plex\nplex.janikhenz.ch"]
     end
 
     subgraph AUTOMATION["Automation (*arr)"]
-        RD["Radarr\nradarr.janikhenz.ch\nFilme"]
-        SN["Sonarr\nsonarr.janikhenz.ch\nSerien"]
-        PR["Prowlarr\nprowlarr.janikhenz.ch\nIndexer Manager"]
+        RD["Radarr"]
+        SN["Sonarr"]
+        PR["Prowlarr"]
     end
 
     subgraph DOWNLOAD["Download"]
-        QB["qBittorrent\nqbt.janikhenz.ch\nTorrent Client"]
-        FS["FlareSolverr\n(ClusterIP intern)\nCloudflare Bypass"]
+        QB["qBittorrent\nqbt.janikhenz.ch"]
+        FS["FlareSolverr\nintern"]
     end
 
     subgraph STORAGE["Shared Storage"]
-        GMP["global-media-pvc\n500Gi  /mnt/data/media"]
+        GMP["global-media-pvc\n500Gi"]
     end
 
-    USER -->|"HTTPS"| TRAEFIK
-    TRAEFIK -->|"jellyseerr.janikhenz.ch"| JS
-    TRAEFIK -->|"jellyfin.janikhenz.ch"| JF
-    TRAEFIK -->|"plex.janikhenz.ch"| PL
-    TRAEFIK -->|"radarr.janikhenz.ch"| RD
-    TRAEFIK -->|"sonarr.janikhenz.ch"| SN
-    TRAEFIK -->|"prowlarr.janikhenz.ch"| PR
-    TRAEFIK -->|"qbt.janikhenz.ch"| QB
+    USER --> TRAEFIK
+    TRAEFIK --> JS
+    TRAEFIK --> JF
+    TRAEFIK --> PL
+    TRAEFIK --> RD
+    TRAEFIK --> SN
+    TRAEFIK --> PR
+    TRAEFIK --> QB
 
-    JS -->|"Serien anfragen :8989"| SN
-    JS -->|"Filme anfragen :7878"| RD
-    JS -->|"Verbunden mit :8096"| JF
-
-    PR -->|"Indexer sync"| RD
-    PR -->|"Indexer sync"| SN
-    PR -->|"Cloudflare Bypass :8191"| FS
-
-    RD -->|"Download job :8080"| QB
-    SN -->|"Download job :8080"| QB
-
-    QB -->|"schreibt"| GMP
-    RD -->|"liest/verschiebt"| GMP
-    SN -->|"liest/verschiebt"| GMP
-    JF -->|"streamt von"| GMP
-    PL -->|"streamt von"| GMP
-
-    USER -->|"Stream"| JF
-    USER -->|"Stream"| PL
+    JS --> SN
+    JS --> RD
+    JS --> JF
+    PR --> RD
+    PR --> SN
+    PR --> FS
+    RD --> QB
+    SN --> QB
+    QB --> GMP
+    RD --> GMP
+    SN --> GMP
+    JF --> GMP
+    PL --> GMP
 ```
+
+
 
 ### Services & Images
 
-| Service      | Image                                      | Port  | Service-Typ | Subdomain (Traefik)           | GPU  |
-| ------------ | ------------------------------------------ | ----- | ----------- | ----------------------------- | ---- |
-| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | ClusterIP   | `jellyfin.janikhenz.ch`       | true |
-| Plex         | `plexinc/pms-docker:latest`                | 32400 | ClusterIP   | `plex.janikhenz.ch`           |      |
-| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | ClusterIP   | `jellyseerr.janikhenz.ch`     |      |
-| Radarr       | `linuxserver/radarr:latest`                | 7878  | ClusterIP   | `radarr.janikhenz.ch`         |      |
-| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | ClusterIP   | `sonarr.janikhenz.ch`         |      |
-| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | ClusterIP   | `prowlarr.janikhenz.ch`       |      |
-| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | ClusterIP   | `qbt.janikhenz.ch`            |      |
-| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | ClusterIP   | intern (kein öffentl. Zugang) |      |
 
-> **qBittorrent Torrent-Port:** Port 6881 TCP/UDP läuft als separater `NodePort 30008` (`qbittorrent-torrent-service`), da Raw-TCP/UDP-Traffic nicht durch Traefik's HTTP-Layer geroutet werden kann.
+| Service      | Image                                      | Port  | NodePort | Subdomain (Traefik)       | GPU |
+| ------------ | ------------------------------------------ | ----- | -------- | ------------------------- | --- |
+| Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | `jellyfin.janikhenz.ch`   | ja  |
+| Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | `plex.janikhenz.ch`       |     |
+| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    | `jellyseerr.janikhenz.ch` |     |
+| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    | `radarr.janikhenz.ch`     |     |
+| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    | `sonarr.janikhenz.ch`     |     |
+| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    | `prowlarr.janikhenz.ch`   |     |
+| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    | `qbt.janikhenz.ch`        |     |
+| FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | —        | intern                    |     |
+
+
+> **qBittorrent Torrent-Port:** Port 6881 TCP/UDP läuft als separater `NodePort 30008` (`qbittorrent-torrent-service`), da Raw-TCP/UDP-Traffic nicht durch Traefiks HTTP-Layer geroutet werden kann.
 
 ---
 
-## Fitness Stack (wger)
+## Jarvis Stack
 
-wger ist eine selbst gehostete Fitness-Tracking-Anwendung. Der Stack besteht aus einem Django-Backend, PostgreSQL-Datenbank, Redis-Cache und Celery für asynchrone Tasks.
-
-### Interne Architektur
+Lokaler KI-Stack im Namespace `jarvis` für LLM-Inferenz, Spracherkennung, Sprachausgabe und Vektorspeicher. Details und Betriebsregeln siehe [Jarvis Architektur (Detail)](#jarvis-architektur-detail).
 
 ```mermaid
-flowchart TD
-    USER["User / Browser"]
-    TRAEFIK["Traefik\nIngressRoute\nwger.janikhenz.ch"]
+flowchart LR
+    USER["Client / Continue.dev"]
+    TRAEFIK["Traefik"]
 
-    subgraph FITNESS["namespace: fitness"]
-        WN["wger-nginx\nnginx:stable-alpine\nClusterIP :80\nReverse Proxy"]
-
-        subgraph BACKEND["Backend"]
-            WW["wger-web\nwger/server:latest\nDjango App :8000"]
-            WCW["celery-worker\nwger/server:latest\nAsync Tasks"]
-            WCB["celery-beat\nwger/server:latest\nCron Scheduler"]
-        end
-
-        subgraph DATA["Datenhaltung"]
-            WDB["wger-db\npostgres:15-alpine\n:5432"]
-            WC["wger-cache\nredis:7-alpine\n:6379\nDB1: Cache\nDB2: Celery Broker"]
-        end
-
-        subgraph STORAGE["Shared Storage"]
-            WPGPVC["wger-postgres-pvc\n5Gi"]
-            WRPVC["wger-redis-pvc\n1Gi"]
-            WSPVC["wger-static-pvc\n2Gi RWX"]
-            WMPVC["wger-media-pvc\n10Gi RWX"]
-        end
+    subgraph JARVIS["namespace: jarvis"]
+        OL["Ollama\nollama.janikhenz.ch\nGPU · :11434"]
+        WH["Whisper\nWyoming STT · :10300"]
+        PI["Piper\nWyoming TTS · :10200"]
+        CH["ChromaDB\nClusterIP · :8000"]
     end
 
-    USER -->|"HTTPS"| TRAEFIK
-    TRAEFIK -->|"ClusterIP :80"| WN
-    WN -->|"proxy_pass :8000"| WW
-    WN -->|"/static/ → alias"| WSPVC
-    WN -->|"/media/ → alias"| WMPVC
-
-    WW -->|"Django ORM"| WDB
-    WW -->|"Cache DB1\nCelery DB2"| WC
-    WW -->|"statische Dateien"| WSPVC
-    WW -->|"Medien"| WMPVC
-
-    WCW -->|"Celery Broker DB2"| WC
-    WCW -->|"liest/schreibt"| WMPVC
-    WCW -->|"DB-Zugriff"| WDB
-    WCB -->|"Celery Broker DB2"| WC
-    WCB -->|"DB-Zugriff"| WDB
-
-    WDB --> WPGPVC
-    WC --> WRPVC
+    USER --> TRAEFIK
+    TRAEFIK --> OL
+    WH -.->|"intern"| OL
+    PI -.->|"intern"| OL
+    OL --> CH
 ```
 
-### Services & Images
 
-| Service            | Image                 | Port | Service-Typ | Subdomain (Traefik) |
-| ------------------ | --------------------- | ---- | ----------- | ------------------- |
-| wger-nginx         | `nginx:stable-alpine` | 80   | ClusterIP   | `wger.janikhenz.ch` |
-| wger-web           | `wger/server:latest`  | 8000 | ClusterIP   | —                   |
-| wger-db            | `postgres:15-alpine`  | 5432 | ClusterIP   | —                   |
-| wger-cache         | `redis:7-alpine`      | 6379 | ClusterIP   | —                   |
-| wger-celery-worker | `wger/server:latest`  | —    | —           | —                   |
-| wger-celery-beat   | `wger/server:latest`  | —    | —           | —                   |
+
+
+| Service  | Image                            | Port  | NodePort | Subdomain (Traefik)     | GPU |
+| -------- | -------------------------------- | ----- | -------- | ----------------------- | --- |
+| Ollama   | `ollama/ollama:latest`           | 11434 | 30013    | `ollama.janikhenz.ch`   | ja  |
+| Whisper  | `rhasspy/wyoming-whisper:latest` | 10300 | 30014    | — (nur intern/NodePort) |     |
+| Piper    | `rhasspy/wyoming-piper:latest`   | 10200 | 30015    | —                       |     |
+| ChromaDB | `chromadb/chroma:latest`         | 8000  | —        | intern (ClusterIP)      |     |
+
+
+---
+
+## Monitoring Stack
+
+Prometheus sammelt Metriken vom Cluster, node-exporter liefert Host-Metriken und dcgm-exporter GPU-Metriken vom Homeserver. Grafana visualisiert alles unter `grafana.janikhenz.ch`.
+
+
+| Komponente    | Image / Typ                                    | Port | NodePort | Subdomain (Traefik)       |
+| ------------- | ---------------------------------------------- | ---- | -------- | ------------------------- |
+| Prometheus    | `prom/prometheus:latest`                       | 9090 | 30090    | `prometheus.janikhenz.ch` |
+| Grafana       | `grafana/grafana:latest`                       | 3000 | 30091    | `grafana.janikhenz.ch`    |
+| node-exporter | `prom/node-exporter` (DaemonSet)               | 9100 | —        | intern                    |
+| dcgm-exporter | `nvcr.io/nvidia/k8s/dcgm-exporter` (DaemonSet) | 9400 | —        | intern (GPU-Metriken)     |
+
+
+---
+
+## Home Assistant
+
+
+| Eigenschaft | Wert                                           |
+| ----------- | ---------------------------------------------- |
+| Image       | `ghcr.io/home-assistant/home-assistant:stable` |
+| Node        | `homeserver`                                   |
+| Port        | 8123                                           |
+| NodePort    | 30009                                          |
+| URL         | `https://homeassistant.janikhenz.ch`           |
+| Config-PVC  | `home-assistant-config-pvc` (5 Gi)             |
+
+
+---
+
+## Nextcloud
+
+
+| Eigenschaft | Wert                             |
+| ----------- | -------------------------------- |
+| Image       | `nextcloud:latest`               |
+| Node        | `homeserver`                     |
+| Port        | 80                               |
+| NodePort    | 30012                            |
+| URL         | `https://nextcloud.janikhenz.ch` |
+| Data-PVC    | `nextcloud-data-pvc` (100 Gi)    |
+
+
+---
+
+## Vaultwarden
+
+Bitwarden-kompatibler Passwort-Manager auf dem Raspberry Pi.
+
+
+| Eigenschaft | Wert                          |
+| ----------- | ----------------------------- |
+| Image       | `vaultwarden/server:latest`   |
+| Node        | `raspberrypi`                 |
+| Port        | 80                            |
+| NodePort    | 30011                         |
+| URL         | `https://vault.janikhenz.ch`  |
+| Data-PVC    | `vaultwarden-data-pvc` (1 Gi) |
+
 
 ---
 
@@ -373,130 +521,161 @@ Eine selbst gehostete Web-Oberfläche auf dem **Raspberry Pi**, die als zentrale
 flowchart LR
     DEV["Developer\nPush to GitHub"]
     GH_DASH["GitHub\nJanikHenz/dashboard"]
-    GH_ACT["GitHub Actions\ndocker-publish.yml"]
+    GH_ACT["GitHub Actions"]
     GHCR["ghcr.io/janikhenz/dashboard:latest"]
     GH_HOME["GitHub\nJanikHenz/my-homelab"]
     ARGO["ArgoCD\napps/dashboard.yaml"]
-    POD["nginx Pod\nRaspberry Pi\nClusterIP :80"]
-    TRAEFIK["Traefik\nIngressRoute\njanikhenz.ch"]
+    POD["nginx Pod\nRaspberry Pi"]
+    TRAEFIK["Traefik\njanikhenz.ch"]
 
-    DEV -->|git push| GH_DASH
-    GH_DASH -->|trigger| GH_ACT
-    GH_ACT -->|build & push image| GHCR
-    ARGO -->|pull image| GHCR
-    GH_HOME -->|sync| ARGO
-    ARGO -->|deploy| POD
-    TRAEFIK -->|"Host(janikhenz.ch)"| POD
+    DEV --> GH_DASH
+    GH_DASH --> GH_ACT
+    GH_ACT --> GHCR
+    ARGO --> GHCR
+    GH_HOME --> ARGO
+    ARGO --> POD
+    TRAEFIK --> POD
 ```
 
+
+
 ### Details
+
 
 | Eigenschaft | Wert                                                          |
 | ----------- | ------------------------------------------------------------- |
 | Image       | `ghcr.io/janikhenz/dashboard:latest`                          |
 | Node        | `raspberrypi`                                                 |
-| Service-Typ | `ClusterIP`                                                   |
+| NodePort    | 30080                                                         |
 | URL         | `https://janikhenz.ch`                                        |
 | Source Repo | [JanikHenz/dashboard](https://github.com/JanikHenz/dashboard) |
+
 
 ---
 
 ## Storage-Übersicht
 
-| PVC                      | Größe  | Access Mode | Pfad auf Host                  | Konsumenten                          |
-| ------------------------ | ------ | ----------- | ------------------------------ | ------------------------------------ |
-| `jellyfin-config-pvc`    | 10 Gi  | RWO         | `/mnt/data/jellyfin/config`    | Jellyfin                             |
-| `plex-config-pvc`        | 10 Gi  | RWO         | `/mnt/data/plex/config`        | Plex                                 |
-| `radarr-config-pvc`      | 1 Gi   | RWO         | `/mnt/data/radarr/config`      | Radarr                               |
-| `sonarr-config-pvc`      | 1 Gi   | RWO         | `/mnt/data/sonarr/config`      | Sonarr                               |
-| `qbittorrent-config-pvc` | 1 Gi   | RWO         | `/mnt/data/qbittorrent/config` | qBittorrent                          |
-| `prowlarr-config-pvc`    | 1 Gi   | RWO         | `/mnt/data/prowlarr/config`    | Prowlarr                             |
-| `jellyseerr-config-pvc`  | 5 Gi   | RWO         | `/mnt/data/jellyseerr/config`  | Jellyseerr                           |
-| `global-media-pvc`       | 500 Gi | **RWX**     | `/mnt/data/media`              | Jellyfin, Plex, Radarr, Sonarr, qBit |
-| `wger-postgres-pvc`      | 5 Gi   | RWO         | `/mnt/data/wger/postgres`      | wger-db                              |
-| `wger-redis-pvc`         | 1 Gi   | RWO         | `/mnt/data/wger/redis`         | wger-cache                           |
-| `wger-static-pvc`        | 2 Gi   | **RWX**     | `/mnt/data/wger/static`        | wger-web, wger-nginx                 |
-| `wger-media-pvc`         | 10 Gi  | **RWX**     | `/mnt/data/wger/media`         | wger-web, wger-nginx, celery-worker  |
+
+| PVC                         | Größe  | Access Mode | Pfad auf Host                     | Konsumenten                          |
+| --------------------------- | ------ | ----------- | --------------------------------- | ------------------------------------ |
+| `jellyfin-config-pvc`       | 10 Gi  | RWO         | `/mnt/data/jellyfin/config`       | Jellyfin                             |
+| `plex-config-pvc`           | 10 Gi  | RWO         | `/mnt/data/plex/config`           | Plex                                 |
+| `radarr-config-pvc`         | 1 Gi   | RWO         | `/mnt/data/radarr/config`         | Radarr                               |
+| `sonarr-config-pvc`         | 1 Gi   | RWO         | `/mnt/data/sonarr/config`         | Sonarr                               |
+| `qbittorrent-config-pvc`    | 1 Gi   | RWO         | `/mnt/data/qbittorrent/config`    | qBittorrent                          |
+| `prowlarr-config-pvc`       | 1 Gi   | RWO         | `/mnt/data/prowlarr/config`       | Prowlarr                             |
+| `jellyseerr-config-pvc`     | 5 Gi   | RWO         | `/mnt/data/jellyseerr/config`     | Jellyseerr                           |
+| `global-media-pvc`          | 500 Gi | **RWX**     | `/mnt/data/media`                 | Jellyfin, Plex, Radarr, Sonarr, qBit |
+| `ollama-config-pvc`         | 50 Gi  | RWO         | `/mnt/data/ollama/config`         | Ollama (Modelle)                     |
+| `chromadb-pvc`              | 5 Gi   | RWO         | `/mnt/data/chromadb`              | ChromaDB                             |
+| `prometheus-pvc`            | 10 Gi  | RWO         | `/mnt/data/prometheus`            | Prometheus                           |
+| `grafana-pvc`               | 2 Gi   | RWO         | `/mnt/data/grafana`               | Grafana                              |
+| `home-assistant-config-pvc` | 5 Gi   | RWO         | `/mnt/data/home-assistant/config` | Home Assistant                       |
+| `nextcloud-data-pvc`        | 100 Gi | RWO         | `/mnt/data/nextcloud/data`        | Nextcloud                            |
+| `vaultwarden-data-pvc`      | 1 Gi   | RWO         | `/mnt/data/vaultwarden/data`      | Vaultwarden                          |
+
 
 ---
 
 ## NVIDIA GPU
 
-Die GPU wird über den **NVIDIA Device Plugin** bereitgestellt und aktuell exklusiv von Jellyfin für Hardware-Transcoding genutzt.
+Die GPU wird über den **NVIDIA Device Plugin** bereitgestellt. Aktuell nutzen **Jellyfin** (Hardware-Transcoding) und **Ollama** (LLM-Inferenz) jeweils eine GPU. Der **DCGM Exporter** im Monitoring-Namespace liefert GPU-Metriken an Prometheus.
 
 ```mermaid
 flowchart TD
     subgraph KUBE_SYSTEM["kube-system"]
         CM["ConfigMap\nnvidia-plugin-configs"]
         RC["RuntimeClass\nnvidia"]
-        DS["DaemonSet\nnvidia-device-plugin\nnvcr.io/nvidia/k8s-device-plugin:v0.18.0\nnodeSelector: homeserver"]
-        DS -->|"--config-file"| CM
-        DS -->|"runtimeClassName"| RC
+        DS["DaemonSet\nnvidia-device-plugin\nnodeSelector: homeserver"]
     end
 
     subgraph NODE["Node: homeserver"]
         GPU_HW["Physische NVIDIA GPU"]
-        SLOT1["GPU-Zuweisung"]
-        GPU_HW --> SLOT1
     end
 
     subgraph MEDIA["namespace: media"]
-        JF["Jellyfin\nnvidia.com/gpu: 1\nruntimeClassName: nvidia"]
+        JF["Jellyfin\nnvidia.com/gpu: 1"]
+    end
+
+    subgraph JARVIS["namespace: jarvis"]
+        OL["Ollama\nnvidia.com/gpu: 1"]
+    end
+
+    subgraph MON["namespace: monitoring"]
+        DCGM["dcgm-exporter\nDaemonSet"]
     end
 
     DS --> GPU_HW
-    SLOT1 --> JF
+    GPU_HW --> JF
+    GPU_HW --> OL
+    GPU_HW --> DCGM
 ```
 
-**Konfiguration (nvidia-plugin-configs):**
+
+
+**Konfiguration (nvidia-plugin-configs)**
 
 - `migStrategy: none`
 - `deviceListStrategy: envvar`
 - `deviceIDStrategy: uuid`
-- `nvidia.com/gpu` wird aktuell nur von Jellyfin angefordert
+
+> Jellyfin und Ollama teilen sich dieselbe physische GPU. Gleichzeitiger Volllast-Betrieb kann zu Ressourcenkonflikten führen.
 
 ---
 
-## Jarvis Architektur
+## Jarvis Architektur (Detail)
 
-Die technische Zielarchitektur fuer den Jarvis-Stack (Ollama, Whisper, Piper, ChromaDB), Betriebsregeln, Recovery-Runbook und Continue.dev-Setup findest du in:
+Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-Runbook und Continue.dev-Setup findest du in:
 
-- [`docs/jarvis-architecture.md`](docs/jarvis-architecture.md)
+- `[docs/jarvis-architecture.md](docs/jarvis-architecture.md)`
 
 ---
 
-## Port-Übersicht & Routing
+## Port-Übersicht
 
-Alle öffentlichen Services sind vom Typ **NodePort** — sie sind damit sowohl **lokal im Heimnetz** (via `http://homeserver:<nodePort>`) als auch **extern** über Traefik + Cloudflare Tunnel (via Subdomain) erreichbar.
+Öffentliche HTTP-Services sind per **NodePort** lokal im Heimnetz erreichbar und extern über Traefik + Cloudflare Tunnel (Subdomain).
 
 ### Öffentlicher Zugang (NodePort + Traefik IngressRoute)
 
-| Service           | Namespace | Container-Port | NodePort  | Lokale URL                    | Externe URL (Traefik)             |
-| ----------------- | --------- | -------------- | --------- | ----------------------------- | --------------------------------- |
-| Dashboard (nginx) | default   | 80             | **30080** | `http://raspberrypi:30080`    | `https://janikhenz.ch`            |
-| Jellyfin          | media     | 8096           | **30001** | `http://homeserver:30001`     | `https://jellyfin.janikhenz.ch`   |
-| Plex              | media     | 32400          | **30002** | `http://homeserver:30002/web` | `https://plex.janikhenz.ch`       |
-| Jellyseerr        | media     | 5055           | **30003** | `http://homeserver:30003`     | `https://jellyseerr.janikhenz.ch` |
-| Radarr            | media     | 7878           | **30004** | `http://homeserver:30004`     | `https://radarr.janikhenz.ch`     |
-| Sonarr            | media     | 8989           | **30005** | `http://homeserver:30005`     | `https://sonarr.janikhenz.ch`     |
-| Prowlarr          | media     | 9696           | **30006** | `http://homeserver:30006`     | `https://prowlarr.janikhenz.ch`   |
-| qBittorrent WebUI | media     | 8080           | **30007** | `http://homeserver:30007`     | `https://qbt.janikhenz.ch`        |
-| wger (nginx)      | fitness   | 80             | **30010** | `http://homeserver:30010`     | `https://wger.janikhenz.ch`       |
+
+| Service           | Namespace      | Container-Port | NodePort  | Lokale URL                    | Externe URL (Traefik)                |
+| ----------------- | -------------- | -------------- | --------- | ----------------------------- | ------------------------------------ |
+| Dashboard (nginx) | default        | 80             | **30080** | `http://raspberrypi:30080`    | `https://janikhenz.ch`               |
+| Jellyfin          | media          | 8096           | **30001** | `http://homeserver:30001`     | `https://jellyfin.janikhenz.ch`      |
+| Plex              | media          | 32400          | **30002** | `http://homeserver:30002/web` | `https://plex.janikhenz.ch`          |
+| Jellyseerr        | media          | 5055           | **30003** | `http://homeserver:30003`     | `https://jellyseerr.janikhenz.ch`    |
+| Radarr            | media          | 7878           | **30004** | `http://homeserver:30004`     | `https://radarr.janikhenz.ch`        |
+| Sonarr            | media          | 8989           | **30005** | `http://homeserver:30005`     | `https://sonarr.janikhenz.ch`        |
+| Prowlarr          | media          | 9696           | **30006** | `http://homeserver:30006`     | `https://prowlarr.janikhenz.ch`      |
+| qBittorrent WebUI | media          | 8080           | **30007** | `http://homeserver:30007`     | `https://qbt.janikhenz.ch`           |
+| Home Assistant    | home-assistant | 8123           | **30009** | `http://homeserver:30009`     | `https://homeassistant.janikhenz.ch` |
+| Vaultwarden       | vaultwarden    | 80             | **30011** | `http://raspberrypi:30011`    | `https://vault.janikhenz.ch`         |
+| Nextcloud         | nextcloud      | 80             | **30012** | `http://homeserver:30012`     | `https://nextcloud.janikhenz.ch`     |
+| Ollama            | jarvis         | 11434          | **30013** | `http://homeserver:30013`     | `https://ollama.janikhenz.ch`        |
+| Whisper           | jarvis         | 10300          | **30014** | `http://homeserver:30014`     | —                                    |
+| Piper             | jarvis         | 10200          | **30015** | `http://homeserver:30015`     | —                                    |
+| Prometheus        | monitoring     | 9090           | **30090** | `http://homeserver:30090`     | `https://prometheus.janikhenz.ch`    |
+| Grafana           | monitoring     | 3000           | **30091** | `http://homeserver:30091`     | `https://grafana.janikhenz.ch`       |
+
 
 ### NodePort (Torrent-Protokoll — kein HTTP, kein Traefik)
+
 
 | Service                     | Namespace | Port         | NodePort  | Zweck                       |
 | --------------------------- | --------- | ------------ | --------- | --------------------------- |
 | qbittorrent-torrent-service | media     | 6881 TCP/UDP | **30008** | Torrent-Peers (Raw TCP/UDP) |
 
+
 ### Interne ClusterIP (kein öffentlicher Zugang)
 
-| Service            | Namespace | Port | Konsumenten      |
-| ------------------ | --------- | ---- | ---------------- |
-| FlareSolverr       | media     | 8191 | Prowlarr         |
-| wger-web-service   | fitness   | 8000 | wger-nginx       |
-| wger-db-service    | fitness   | 5432 | wger-web, celery |
-| wger-cache-service | fitness   | 6379 | wger-web, celery |
+
+| Service          | Namespace  | Port | Konsumenten     |
+| ---------------- | ---------- | ---- | --------------- |
+| FlareSolverr     | media      | 8191 | Prowlarr        |
+| chromadb-service | jarvis     | 8000 | Jarvis / Ollama |
+| node-exporter    | monitoring | 9100 | Prometheus      |
+| dcgm-exporter    | monitoring | 9400 | Prometheus      |
+
 
 ---
 
@@ -505,10 +684,18 @@ Alle öffentlichen Services sind vom Typ **NodePort** — sie sind damit sowohl 
 ```
 my-homelab/
 ├── bootstrap/
-│   └── root-app.yaml          # ArgoCD App of Apps
+│   └── root-app.yaml              # ArgoCD App of Apps
 │
-├── apps/                      # ArgoCD Application-Definitionen
+├── apps/                          # ArgoCD Application-Definitionen
 │   ├── dashboard.yaml
+│   ├── monitoring.yaml
+│   ├── home-assistant.yaml
+│   ├── nextcloud.yaml
+│   ├── pwd-manager.yaml
+│   ├── ollama.yaml
+│   ├── whisper.yaml
+│   ├── piper.yaml
+│   ├── chromadb.yaml
 │   ├── jellyfin.yaml
 │   ├── plex.yaml
 │   ├── jellyseerr.yaml
@@ -516,31 +703,51 @@ my-homelab/
 │   ├── sonarr.yaml
 │   ├── prowlarr.yaml
 │   ├── qbittorrent.yaml
-│   ├── flaresolverr.yaml
-│   └── wger.yaml
+│   └── flaresolverr.yaml
 │
-├── infrastrucure/             # Cluster-weite Ressourcen
-│   ├── namespaces.yaml        # NS: media, fitness
-│   ├── media-storage.yaml     # PV/PVC für Media Stack
-│   ├── wger-storage.yaml      # PV/PVC für Fitness Stack
-│   ├── daemonset.yaml         # NVIDIA Device Plugin DaemonSet
-│   ├── nvidia-plugin-config.yaml # Time-Slicing ConfigMap
-│   └── nvidia-runtimeclass.yaml  # RuntimeClass: nvidia
+├── infrastrucure/                 # Cluster-weite Ressourcen
+│   ├── namespaces.yaml
+│   ├── media-storage.yaml
+│   ├── jarvis-storage.yaml
+│   ├── monitoring-storage.yaml
+│   ├── home-assistant-storage.yaml
+│   ├── nextcloud-storage.yaml
+│   ├── pwd-manager-storage.yaml
+│   ├── daemonset.yaml             # NVIDIA Device Plugin
+│   ├── nvidia-plugin-config.yaml
+│   └── nvidia-runtimeclass.yaml
 │
-└── manifests/                 # Kubernetes Manifeste pro App
-    ├── dashboard/
-    │   ├── nginx-dashboard-deployment.yaml
-    │   ├── nginx-dashboard-service.yaml   # ClusterIP
-    │   └── nginx-dashboard-ingressroute.yaml  # janikhenz.ch
-    ├── media-stack/
-    │   ├── jellyfin/          # Deployment + ClusterIP + IngressRoute
-    │   ├── plex/
-    │   ├── jellyseerr/
-    │   ├── radarr/
-    │   ├── sonarr/
-    │   ├── prowlarr/
-    │   ├── qbittorrent/       # ClusterIP (WebUI) + NodePort (torrent 6881) + IngressRoute
-    │   └── flaresolverr/      # ClusterIP only (intern)
-    └── fitness/
-        └── wger/              # 6 Deployments + Services + ConfigMap + IngressRoute
+├── manifests/
+│   ├── dashboard/
+│   ├── media-stack/
+│   │   ├── jellyfin/
+│   │   ├── plex/
+│   │   ├── jellyseerr/
+│   │   ├── radarr/
+│   │   ├── sonarr/
+│   │   ├── prowlarr/
+│   │   ├── qbittorrent/
+│   │   └── flaresolverr/
+│   ├── jarvis/
+│   │   ├── ollama/
+│   │   ├── whisper/
+│   │   ├── piper/
+│   │   └── chromadb/
+│   ├── monitoring/
+│   ├── home-assistant/
+│   ├── nextcloud/
+│   └── pwd-manager/
+│
+└── docs/
+    ├── jarvis-architecture.md
+    └── img/                       # Screenshots für dieses README
 ```
+
+---
+
+## TODO
+
+- Ollama llm verbessern
+- Pi-hole via Kubernetes installieren und in GitOps aufnehmen
+- Eigene Fitness/Tracking-App implementieren
+
