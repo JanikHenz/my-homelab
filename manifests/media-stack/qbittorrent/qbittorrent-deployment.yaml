@@ -19,6 +19,18 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      initContainers:
+        # Stale lock files on the PVC survive pod restarts and make qBittorrent
+        # exit immediately ("another instance is running").
+        - name: clear-stale-locks
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - rm -f /config/qBittorrent/lockfile /config/qBittorrent/ipc-socket /config/qBittorrent/qBittorrent-data.conf.lock
+          volumeMounts:
+            - name: config
+              mountPath: /config
       containers:
         - name: qbittorrent
           image: linuxserver/qbittorrent:latest
