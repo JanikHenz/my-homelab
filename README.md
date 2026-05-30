@@ -8,11 +8,12 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 | Stack            | Namespace        | Kurzbeschreibung                                   |
 | ---------------- | ---------------- | -------------------------------------------------- |
 | Media            | `media`          | Jellyfin, Plex, *arr, qBittorrent, FlareSolverr    |
-| Jarvis           | `jarvis`         | Ollama (LLM), Whisper (STT), Piper (TTS), ChromaDB |
+| Jarvis           | `jarvis`         | Ollama (LLM), Open WebUI, Whisper, Piper, ChromaDB |
 | Monitoring       | `monitoring`     | Prometheus, Grafana, node-exporter, DCGM Exporter  |
 | Home Assistant   | `home-assistant` | Smart Home                                         |
 | Nextcloud        | `nextcloud`      | Dateiablage                                        |
 | Passwort-Manager | `vaultwarden`    | Vaultwarden (Bitwarden-kompatibel)                 |
+| Gaming           | `gaming`         | Pterodactyl Panel & Wings (Game Server Management) |
 | Dashboard        | `default`        | Zentrales Homelab-Dashboard (nginx auf dem Pi)     |
 
 
@@ -31,6 +32,7 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 - [Home Assistant](#home-assistant)
 - [Nextcloud](#nextcloud)
 - [Vaultwarden](#vaultwarden)
+- [Pterodactyl](#pterodactyl)
 - [Dashboard](#dashboard)
 - [Storage-Übersicht](#storage-übersicht)
 - [NVIDIA GPU](#nvidia-gpu)
@@ -331,6 +333,7 @@ Alle ArgoCD Applications haben:
 | `home-assistant` | home-assistant                                                                  | Smart Home                              |
 | `nextcloud`      | nextcloud                                                                       | Cloud-Speicher                          |
 | `vaultwarden`    | pwd-manager                                                                     | Passwort-Tresor                         |
+| `gaming`         | pterodactyl                                                                     | Game Server Management                  |
 | `default`        | dashboard                                                                       | Homelab-Startseite                      |
 
 
@@ -415,7 +418,7 @@ flowchart TD
 
 ## Jarvis Stack
 
-Lokaler KI-Stack im Namespace `jarvis` für LLM-Inferenz, Spracherkennung, Sprachausgabe und Vektorspeicher. Details und Betriebsregeln siehe [Jarvis Architektur (Detail)](#jarvis-architektur-detail).
+Lokaler KI-Stack im Namespace `jarvis` für LLM-Inferenz, Chat-Interface, Spracherkennung, Sprachausgabe und Vektorspeicher. Open WebUI bietet eine moderne Weboberfläche für Ollama mit Chat-Verlauf, Model-Management und RAG-Funktionen. Details und Betriebsregeln siehe [Jarvis Architektur (Detail)](#jarvis-architektur-detail).
 
 ```mermaid
 flowchart LR
@@ -424,6 +427,7 @@ flowchart LR
 
     subgraph JARVIS["namespace: jarvis"]
         OL["Ollama\nollama.janikhenz.ch\nGPU · :11434"]
+        OW["Open WebUI\nchat.janikhenz.ch\n:8080"]
         WH["Whisper\nWyoming STT · :10300"]
         PI["Piper\nWyoming TTS · :10200"]
         CH["ChromaDB\nClusterIP · :8000"]
@@ -508,6 +512,103 @@ Bitwarden-kompatibler Passwort-Manager auf dem Raspberry Pi.
 | URL         | `https://vault.janikhenz.ch`  |
 | Data-PVC    | `vaultwarden-data-pvc` (1 Gi) |
 
+
+---
+
+## Pterodactyl
+
+Ein Open-Source Game Server Management Panel mit einem webbasierten Control Panel (Panel) und einem Node-Daemon (Wings) zur Verwaltung von Docker-basierten Game Servern. Pterodactyl erlaubt das einfache Erstellen, Konfigurieren und Verwalten von Minecraft, CS:GO, Valheim und vielen anderen Game Servern über eine moderne Web-Oberfläche.
+
+### Architektur
+
+```mermaid
+flowchart TD
+    USER["User / Browser"]
+    CF["Cloudflare\nZero Trust"]
+    TRAEFIK["Traefik\nIngressRoute"]
+
+    subgraph PANEL["Pterodactyl Panel (PHP/Laravel)"]
+        PP["Panel WebUI\npterodactyl.janikhenz.ch"]
+        MARIA["MariaDB\nUser & Config"]
+    end
+
+    subgraph WINGS["Pterodactyl Wings (Node Daemon)"]
+        PW["Wings API\nPort 8080"]
+        DOCKER["Docker Engine\nauf Homeserver"]
+    end
+
+    subgraph SERVERS["Game Server"]
+        MC["Minecraft\nDocker Container"]
+        CS["CS:GO/CS2\nDocker Container"]
+        OTHER["Weitere Games..."]
+    end
+
+    USER --> CF
+    CF --> TRAEFIK
+    TRAEFIK --> PP
+    PP --> MARIA
+    PP --> PW
+    PW --> DOCKER
+    DOCKER --> MC
+    DOCKER --> CS
+    DOCKER --> OTHER
+```
+
+### Komponenten
+
+| Komponente | Image                           | Port  | NodePort | Zweck                          |
+| ---------- | ------------------------------- | ----- | -------- | ------------------------------ |
+| Panel      | `ghcr.io/pterodactyl/panel:v1.11.7` | 80    | 30020    | WebUI für Server-Management    |
+| MariaDB    | `mariadb:10.11`                 | 3306  | —        | Datenbank für Panel            |
+| Wings      | `ghcr.io/pterodactyl/wings:v1.11.13` | 8080  | —        | Node-Daemon (hostNetwork)      |
+
+### Konfiguration
+
+Bevor dem ersten Deployment müssen die Secrets angepasst werden:
+
+```bash
+# Passwörter generieren
+openssl rand -base64 32  # für mariadb-root-password
+openssl rand -base64 32  # für mariadb-password
+openssl rand -base64 32  # für app-key (mit base64: Präfix)
+```
+
+Dann in `manifests/gaming/pterodactyl/pterodactyl-secrets.yaml` eintragen.
+
+### Erstkonfiguration Wings
+
+Nach dem ersten Panel-Start:
+
+1. Auf `https://pterodactyl.janikhenz.ch` einloggen (admin / [aus Secret])
+2. Admin-Account erstellen und einloggen
+3. Im Admin-Bereich einen neuen **Node** erstellen:
+   - Name: `homeserver`
+   - FQDN: `homeserver` (interner DNS oder IP)
+   - Memory: z. B. `8192` (8 GB)
+   - Disk: z. B. `50000` (50 GB)
+4. Die `config.yml` für Wings generieren und im PVC speichern:
+   ```bash
+   kubectl cp config.yml gaming/pterodactyl-wings-pod:/etc/pterodactyl/config.yml
+   ```
+5. Wings-Pod neustarten
+
+### Storage
+
+| PVC                           | Grösse | Access | Mount-Punkt (im Pod)           |
+| ----------------------------- | ------ | ------ | ------------------------------ |
+| `pterodactyl-panel-config-pvc` | 5 Gi   | RWO    | `/app/storage`                 |
+| `pterodactyl-mariadb-pvc`      | 10 Gi  | RWO    | `/var/lib/mysql`               |
+| `pterodactyl-wings-config-pvc` | 5 Gi   | RWO    | `/etc/pterodactyl`             |
+| `pterodactyl-servers-pvc`      | 100 Gi | RWX    | `/var/lib/pterodactyl/volumes` |
+
+### URL & Zugriff
+
+| Service | URL                               | Anmeldedaten            |
+| ------- | --------------------------------- | ----------------------- |
+| Panel   | `https://pterodactyl.janikhenz.ch` | Admin aus Secrets       |
+| NodePort| `http://homeserver:30020`          | (lokaler Zugriff)       |
+
+> **Wichtig:** Wings läuft mit `hostNetwork: true` und `privileged: true`, um Docker-Container für Game Server starten zu können. Dies ist für die Funktionalität erforderlich.
 
 ---
 
@@ -652,10 +753,12 @@ Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-R
 | Vaultwarden       | vaultwarden    | 80             | **30011** | `http://raspberrypi:30011`    | `https://vault.janikhenz.ch`         |
 | Nextcloud         | nextcloud      | 80             | **30012** | `http://homeserver:30012`     | `https://nextcloud.janikhenz.ch`     |
 | Ollama            | jarvis         | 11434          | **30013** | `http://homeserver:30013`     | `https://ollama.janikhenz.ch`        |
+| Open WebUI        | jarvis         | 8080           | **30016** | `http://homeserver:30016`     | `https://chat.janikhenz.ch`          |
 | Whisper           | jarvis         | 10300          | **30014** | `http://homeserver:30014`     | —                                    |
 | Piper             | jarvis         | 10200          | **30015** | `http://homeserver:30015`     | —                                    |
 | Prometheus        | monitoring     | 9090           | **30090** | `http://homeserver:30090`     | `https://prometheus.janikhenz.ch`    |
 | Grafana           | monitoring     | 3000           | **30091** | `http://homeserver:30091`     | `https://grafana.janikhenz.ch`       |
+| Pterodactyl Panel | gaming         | 80             | **30020** | `http://homeserver:30020`     | `https://pterodactyl.janikhenz.ch`   |
 
 
 ### NodePort (Torrent-Protokoll — kein HTTP, kein Traefik)
@@ -693,6 +796,7 @@ my-homelab/
 │   ├── nextcloud.yaml
 │   ├── pwd-manager.yaml
 │   ├── ollama.yaml
+│   ├── openwebui.yaml
 │   ├── whisper.yaml
 │   ├── piper.yaml
 │   ├── chromadb.yaml
@@ -704,6 +808,7 @@ my-homelab/
 │   ├── prowlarr.yaml
 │   ├── qbittorrent.yaml
 │   └── flaresolverr.yaml
+│   └── pterodactyl.yaml
 │
 ├── infrastrucure/                 # Cluster-weite Ressourcen
 │   ├── namespaces.yaml
@@ -713,6 +818,7 @@ my-homelab/
 │   ├── home-assistant-storage.yaml
 │   ├── nextcloud-storage.yaml
 │   ├── pwd-manager-storage.yaml
+│   ├── gaming-storage.yaml
 │   ├── daemonset.yaml             # NVIDIA Device Plugin
 │   ├── nvidia-plugin-config.yaml
 │   └── nvidia-runtimeclass.yaml
@@ -730,13 +836,16 @@ my-homelab/
 │   │   └── flaresolverr/
 │   ├── jarvis/
 │   │   ├── ollama/
+│   │   ├── openwebui/
 │   │   ├── whisper/
 │   │   ├── piper/
 │   │   └── chromadb/
 │   ├── monitoring/
 │   ├── home-assistant/
 │   ├── nextcloud/
-│   └── pwd-manager/
+│   ├── pwd-manager/
+│   └── gaming/
+│       └── pterodactyl/
 │
 └── docs/
     ├── jarvis-architecture.md

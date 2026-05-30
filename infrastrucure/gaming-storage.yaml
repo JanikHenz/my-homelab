@@ -1,0 +1,91 @@
+# PTRODACTYL PANEL CONFIG
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pterodactyl-panel-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/pterodactyl/panel/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pterodactyl-panel-config-pvc
+  namespace: gaming
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: pterodactyl-panel-config-pv
+---
+# PTRODACTYL PANEL DATABASE (MariaDB)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pterodactyl-mariadb-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/pterodactyl/panel/database" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pterodactyl-mariadb-pvc
+  namespace: gaming
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: pterodactyl-mariadb-pv
+---
+# PTRODACTYL WINGS CONFIG & DATA
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pterodactyl-wings-config-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/pterodactyl/wings/config" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pterodactyl-wings-config-pvc
+  namespace: gaming
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: pterodactyl-wings-config-pv
+---
+# GAME SERVER DATA (shared between Panel and Wings)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pterodactyl-servers-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 100Gi }
+  accessModes: ["ReadWriteMany"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/pterodactyl/servers" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pterodactyl-servers-pvc
+  namespace: gaming
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteMany"]
+  resources: { requests: { storage: 100Gi } }
+  volumeName: pterodactyl-servers-pv

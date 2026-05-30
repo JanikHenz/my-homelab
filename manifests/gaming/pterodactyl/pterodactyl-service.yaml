@@ -1,0 +1,33 @@
+# Pterodactyl Panel Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: pterodactyl-panel-service
+  namespace: gaming
+spec:
+  type: NodePort
+  selector:
+    app: pterodactyl-panel
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+      nodePort: 30020
+---
+# Pterodactyl Wings Service
+# Note: Wings uses hostNetwork, so this service is mainly for internal reference
+# The Wings API is accessible on the node directly via host networking
+apiVersion: v1
+kind: Service
+metadata:
+  name: pterodactyl-wings-service
+  namespace: gaming
+spec:
+  type: ClusterIP
+  selector:
+    app: pterodactyl-wings
+  ports:
+    - name: wings-api
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

@@ -43,3 +43,26 @@ spec:
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 50Gi } }
   volumeName: ollama-config-pv
+---
+# OPEN WEBUI DATA (chat history, settings)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: openwebui-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/openwebui" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openwebui-pvc
+  namespace: jarvis
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: openwebui-pv

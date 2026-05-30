@@ -1,0 +1,99 @@
+# Pterodactyl Wings Daemon Deployment
+# Note: Wings requires privileged access to manage Docker containers
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pterodactyl-wings
+  namespace: gaming
+  labels:
+    app: pterodactyl-wings
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pterodactyl-wings
+  template:
+    metadata:
+      labels:
+        app: pterodactyl-wings
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      hostNetwork: true  # Required for Wings to manage game server ports dynamically
+      containers:
+        - name: wings
+          image: ghcr.io/pterodactyl/wings:v1.11.13
+          env:
+            - name: WINGS_UID
+              value: "988"
+            - name: WINGS_GID
+              value: "988"
+            - name: TZ
+              value: "Europe/Zurich"
+            - name: WINGS_CONFIG_PATH
+              value: "/etc/pterodactyl/config.yml"
+          ports:
+            - containerPort: 8080
+              name: wings-api
+              protocol: TCP
+            # Game server ports - these are managed dynamically by Wings
+            # Standard allocation range: 20000-30000
+          securityContext:
+            privileged: true  # Required for Docker-in-Docker
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - NET_ADMIN
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/pterodactyl
+            - name: servers
+              mountPath: /var/lib/pterodactyl/volumes
+            - name: tmp
+              mountPath: /tmp
+            # Mount Docker socket for container management
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+          livenessProbe:
+            httpGet:
+              path: /api/system
+              port: 8080
+              scheme: HTTPS
+              httpHeaders:
+                - name: Authorization
+                  value: "Bearer ignored"
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/system
+              port: 8080
+              scheme: HTTPS
+              httpHeaders:
+                - name: Authorization
+                  value: "Bearer ignored"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: pterodactyl-wings-config-pvc
+        - name: servers
+          persistentVolumeClaim:
+            claimName: pterodactyl-servers-pvc
+        - name: tmp
+          emptyDir: {}
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket

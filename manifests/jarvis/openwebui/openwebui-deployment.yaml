@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openwebui
+  namespace: jarvis
+  labels:
+    app: openwebui
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openwebui
+  template:
+    metadata:
+      labels:
+        app: openwebui
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      containers:
+        - name: openwebui
+          image: ghcr.io/open-webui/open-webui:main
+          env:
+            # Connect to Ollama internally
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama-service:11434"
+            # Enable persistent data
+            - name: DATA_DIR
+              value: "/app/backend/data"
+            # Disable signup for security (first user becomes admin)
+            - name: ENABLE_SIGNUP
+              value: "false"
+            # Set default model (optional)
+            - name: DEFAULT_MODELS
+              value: ""
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          volumeMounts:
+            - name: data
+              mountPath: /app/backend/data
+          livenessProbe:
+            httpGet:
+              path: /api/config
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/config
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openwebui-pvc

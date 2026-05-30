@@ -1,0 +1,86 @@
+# MariaDB Database for Pterodactyl Panel
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pterodactyl-mariadb
+  namespace: gaming
+  labels:
+    app: pterodactyl-mariadb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pterodactyl-mariadb
+  template:
+    metadata:
+      labels:
+        app: pterodactyl-mariadb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      containers:
+        - name: mariadb
+          image: mariadb:10.11
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pterodactyl-secrets
+                  key: mariadb-root-password
+            - name: MYSQL_DATABASE
+              value: panel
+            - name: MYSQL_USER
+              value: pterodactyl
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pterodactyl-secrets
+                  key: mariadb-password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pterodactyl-mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pterodactyl-mariadb
+  namespace: gaming
+spec:
+  type: ClusterIP
+  selector:
+    app: pterodactyl-mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306

@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pterodactyl
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "5"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    targetRevision: HEAD
+    path: manifests/gaming/pterodactyl
+  destination:
+    name: homelab
+    namespace: gaming
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

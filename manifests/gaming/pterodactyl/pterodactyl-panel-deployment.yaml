@@ -1,0 +1,133 @@
+# Pterodactyl Panel Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pterodactyl-panel
+  namespace: gaming
+  labels:
+    app: pterodactyl-panel
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pterodactyl-panel
+  template:
+    metadata:
+      labels:
+        app: pterodactyl-panel
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      initContainers:
+        # Wait for database to be ready
+        - name: wait-for-db
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z pterodactyl-mariadb 3306; do
+                echo "Waiting for database..."
+                sleep 2
+              done
+        # Ensure proper permissions on config volume
+        - name: fix-permissions
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - chown -R 33:33 /app/storage /app/bootstrap/cache 2>/dev/null || true
+          volumeMounts:
+            - name: config
+              mountPath: /app/storage
+      containers:
+        - name: panel
+          image: ghcr.io/pterodactyl/panel:v1.11.7
+          env:
+            - name: APP_URL
+              value: "https://pterodactyl.janikhenz.ch"
+            - name: APP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pterodactyl-secrets
+                  key: app-key
+            - name: APP_ENV
+              value: "production"
+            - name: APP_DEBUG
+              value: "false"
+            - name: APP_TIMEZONE
+              value: "Europe/Zurich"
+            - name: APP_SERVICE_AUTHOR
+              value: "noreply@janikhenz.ch"
+            # Database Configuration
+            - name: DB_CONNECTION
+              value: "mysql"
+            - name: DB_HOST
+              value: "pterodactyl-mariadb"
+            - name: DB_PORT
+              value: "3306"
+            - name: DB_DATABASE
+              value: "panel"
+            - name: DB_USERNAME
+              value: "pterodactyl"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pterodactyl-secrets
+                  key: mariadb-password
+            # Redis (using in-container for now)
+            - name: CACHE_DRIVER
+              value: "file"
+            - name: SESSION_DRIVER
+              value: "file"
+            - name: QUEUE_DRIVER
+              value: "sync"
+            # Mail (disabled for now)
+            - name: MAIL_MAILER
+              value: "log"
+            # Admin user auto-creation (optional, for first run)
+            - name: ADMIN_USER
+              value: "admin"
+            - name: ADMIN_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: pterodactyl-secrets
+                  key: admin-password
+            - name: ADMIN_EMAIL
+              value: "admin@janikhenz.ch"
+          ports:
+            - containerPort: 80
+              name: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /app/storage
+            - name: servers
+              mountPath: /var/lib/pterodactyl/volumes
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: pterodactyl-panel-config-pvc
+        - name: servers
+          persistentVolumeClaim:
+            claimName: pterodactyl-servers-pvc
