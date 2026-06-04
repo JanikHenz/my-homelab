@@ -21,7 +21,7 @@ data:
           apiKey: "ollama"
           baseURL: "http://ollama-service:11434/v1"
           models:
-            default: []
+            default: ["llama3.2"]
             fetch: true
           titleConvo: true
           modelDisplayLabel: "Ollama"
