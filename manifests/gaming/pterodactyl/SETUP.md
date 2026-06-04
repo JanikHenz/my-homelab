@@ -154,6 +154,189 @@ kubectl logs -n gaming deployment/pterodactyl-mariadb
    - CPU: `100` (100%)
 4. Erstelle den Server
 
+## Schritt 7: Minecraft Server detailliert einrichten
+
+### 7.1 Minecraft Nest und Eggs installieren
+
+Pterodactyl benötigt "Eggs" (Vorlagen) für verschiedene Spiele. Für Minecraft:
+
+1. Gehe zu **Admin → Nests**
+2. Klicke auf **Import Egg**
+3. Importiere das offizielle Minecraft Egg:
+   ```
+   https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/java/paper/egg-paper.json
+   ```
+
+Alternativ kannst du auch andere Minecraft-Varianten importieren:
+- **Vanilla Minecraft**: `https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/java/vanilla/egg-vanilla.json`
+- **Forge**: `https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/java/forge/egg-forge.json`
+- **Fabric**: `https://raw.githubusercontent.com/parkervcp/eggs/master/game_eggs/minecraft/java/fabric/egg-fabric.json`
+
+### 7.2 Minecraft Server erstellen
+
+1. Gehe zu **Servers → Create New**
+2. **Basic Details**:
+   - **Server Name**: `Minecraft-Survival`
+   - **Server Owner**: Wähle deinen Account
+   - **Default Allocation**: Lasse automatisch zuweisen
+   - **Server Description**: `Mein Minecraft Survival Server`
+
+3. **Allocation Management**:
+   - **Node**: `homeserver`
+   - **Additional Allocations**: Leer lassen (wird automatisch zugewiesen)
+
+4. **Application Feature Limits**:
+   - **Database Limit**: `0` (keine Datenbanken benötigt)
+   - **Allocation Limit**: `1`
+   - **Backup Limit**: `3`
+
+5. **Resource Management**:
+   - **Memory**: `4096` MB (4 GB - empfohlen für 10-20 Spieler)
+   - **Swap**: `0` MB
+   - **Disk Space**: `10240` MB (10 GB)
+   - **Block IO Weight**: `500`
+   - **CPU Limit**: `200` % (2 CPU Kerne)
+
+6. **Nest Configuration**:
+   - **Nest**: `Minecraft`
+   - **Egg**: `Paper` (empfohlen für Performance)
+
+7. **Docker Configuration**:
+   - **Docker Image**: Wird automatisch gesetzt
+   - **Startup Command**: Wird automatisch gesetzt
+
+8. Klicke **Create Server**
+
+### 7.3 Server-Konfiguration anpassen
+
+Nach der Erstellung des Servers:
+
+1. Gehe zu **Servers** und klicke auf deinen Minecraft Server
+2. Navigiere zum **Startup** Tab
+3. Konfiguriere die wichtigsten Variablen:
+
+   - **Minecraft Version**: `1.20.4` (oder gewünschte Version)
+   - **Server Jar File**: `server.jar`
+   - **Build Number**: `latest` (für Paper)
+   - **Java Version**: `17` (empfohlen für moderne Minecraft-Versionen)
+
+4. **Environment Variables** anpassen:
+   ```
+   MINECRAFT_VERSION=1.20.4
+   BUILD_NUMBER=latest
+   SERVER_JARFILE=server.jar
+   VANILLA_VERSION=latest
+   ```
+
+### 7.4 Server starten und konfigurieren
+
+1. Gehe zum **Console** Tab
+2. Klicke **Start** um den Server zu starten
+3. Beim ersten Start wird die EULA akzeptiert werden müssen:
+   - Warte bis der Download abgeschlossen ist
+   - Der Server wird sich automatisch stoppen
+   - Gehe zum **Files** Tab
+   - Bearbeite `eula.txt` und ändere `eula=false` zu `eula=true`
+   - Starte den Server erneut
+
+4. **server.properties** konfigurieren:
+   - Gehe zum **Files** Tab
+   - Bearbeite `server.properties`
+   - Wichtige Einstellungen:
+     ```properties
+     server-name=Mein Minecraft Server
+     gamemode=survival
+     difficulty=normal
+     max-players=20
+     online-mode=true
+     white-list=false
+     spawn-protection=16
+     view-distance=10
+     simulation-distance=10
+     ```
+
+### 7.5 Plugins installieren (nur für Paper/Spigot)
+
+Wenn du Paper als Server-Software gewählt hast, kannst du Plugins installieren:
+
+1. Gehe zum **Files** Tab
+2. Navigiere zum `plugins` Ordner
+3. Lade Plugin-JAR-Dateien hoch
+4. Starte den Server neu
+
+Empfohlene Plugins für den Anfang:
+- **EssentialsX**: Grundlegende Befehle und Features
+- **WorldEdit**: Welt-Bearbeitung
+- **LuckPerms**: Berechtigungssystem
+- **CoreProtect**: Logging und Rollback
+
+### 7.6 Backups einrichten
+
+1. Gehe zum **Backups** Tab
+2. Klicke **Create Backup**
+3. Gib einen Namen ein: `Initial-Setup`
+4. Warte bis das Backup abgeschlossen ist
+
+Automatische Backups können über Cron-Jobs oder Plugins wie **AutoSaveWorld** eingerichtet werden.
+
+### 7.7 Spieler hinzufügen
+
+**Als Operator hinzufügen:**
+1. Gehe zum **Console** Tab
+2. Führe folgenden Befehl aus:
+   ```
+   op dein-minecraft-username
+   ```
+
+**Whitelist aktivieren (optional):**
+1. In der Console:
+   ```
+   whitelist on
+   whitelist add spielername
+   ```
+
+### 7.8 Server-Zugriff testen
+
+1. Öffne Minecraft (Java Edition)
+2. Gehe zu **Multiplayer → Add Server**
+3. **Server Address**: `homeserver:25565` (oder die zugewiesene Port-Nummer)
+4. Teste die Verbindung
+
+## Minecraft Server Troubleshooting
+
+### Server startet nicht
+
+1. **Prüfe die Logs** im Console Tab:
+   - Java-Version Konflikte
+   - Ungenügend RAM
+   - Korrupte JAR-Datei
+
+2. **Häufige Lösungen**:
+   ```bash
+   # Mehr RAM zuweisen (im Panel unter Resources)
+   # Java Version prüfen (im Startup Tab)
+   # Server JAR neu herunterladen
+   ```
+
+### Performance-Probleme
+
+1. **RAM erhöhen**: Mindestens 2GB, empfohlen 4GB+
+2. **CPU-Limit erhöhen**: Minecraft ist CPU-intensiv
+3. **View-Distance reduzieren**: In server.properties auf 8-10
+4. **Paper verwenden**: Bessere Performance als Vanilla
+
+### Verbindungsprobleme
+
+1. **Port prüfen**: Standard ist 25565
+2. **Firewall**: Stelle sicher, dass der Port offen ist
+3. **Online-Mode**: Bei Problemen temporär auf `false` setzen
+
+### Plugin-Fehler
+
+1. **Kompatibilität prüfen**: Plugin-Version mit Server-Version abgleichen
+2. **Abhängigkeiten**: Manche Plugins benötigen andere Plugins
+3. **Logs prüfen**: Fehlermeldungen im Console Tab analysieren
+
 ## Troubleshooting
 
 ### Wings zeigt "Offline"
