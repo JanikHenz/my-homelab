@@ -14,6 +14,12 @@ spec:
   destination:
     name: homelab
     namespace: jarvis
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: librechat-secrets
+      jsonPointers:
+        - /data
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

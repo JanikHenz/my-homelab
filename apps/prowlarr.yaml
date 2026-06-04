@@ -8,11 +8,11 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/janikhenz/my-homelab.git
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
     path: manifests/media-stack/prowlarr
   destination:
-    server: https://kubernetes.default.svc
+    name: homelab
     namespace: media
   syncPolicy:
     syncOptions:

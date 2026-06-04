@@ -5,7 +5,7 @@ metadata:
   namespace: jarvis
 spec:
   entryPoints:
-    - web
+    - websecure
   routes:
     - match: Host(`chat.janikhenz.ch`)
       kind: Rule
