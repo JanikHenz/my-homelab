@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat
+  namespace: jarvis
+  labels:
+    app: librechat
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: librechat
+  template:
+    metadata:
+      labels:
+        app: librechat
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      initContainers:
+        - name: wait-for-mongodb
+          image: mongo:8.0.20
+          command:
+            - sh
+            - -c
+            - |
+              until mongosh --host librechat-mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "waiting for mongodb..."
+                sleep 2
+              done
+        - name: wait-for-meilisearch
+          image: curlimages/curl:8.12.1
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://librechat-meilisearch:7700/health >/dev/null; do
+                echo "waiting for meilisearch..."
+                sleep 2
+              done
+      containers:
+        - name: librechat
+          image: ghcr.io/danny-avila/librechat:latest
+          env:
+            - name: HOST
+              value: "0.0.0.0"
+            - name: PORT
+              value: "3080"
+            - name: MONGO_URI
+              value: "mongodb://librechat-mongodb:27017/LibreChat"
+            - name: MEILI_HOST
+              value: "http://librechat-meilisearch:7700"
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: meili-master-key
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: SEARCH
+              value: "true"
+            - name: DOMAIN_CLIENT
+              value: "https://chat.janikhenz.ch"
+            - name: DOMAIN_SERVER
+              value: "https://chat.janikhenz.ch"
+            - name: TRUST_PROXY
+              value: "1"
+            - name: ALLOW_REGISTRATION
+              value: "false"
+            - name: ALLOW_EMAIL_LOGIN
+              value: "true"
+            - name: ALLOW_SOCIAL_LOGIN
+              value: "false"
+            - name: CONFIG_PATH
+              value: "/app/librechat.yaml"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: jwt-secret
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: jwt-refresh-secret
+            - name: CREDS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: creds-key
+            - name: CREDS_IV
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: creds-iv
+          ports:
+            - containerPort: 3080
+              name: http
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+          volumeMounts:
+            - name: config
+              mountPath: /app/librechat.yaml
+              subPath: librechat.yaml
+            - name: data
+              mountPath: /app/uploads
+              subPath: uploads
+            - name: data
+              mountPath: /app/logs
+              subPath: logs
+            - name: data
+              mountPath: /app/client/public/images
+              subPath: images
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3080
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: librechat-config
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-data-pvc

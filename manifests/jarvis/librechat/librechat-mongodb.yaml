@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat-mongodb
+  namespace: jarvis
+  labels:
+    app: librechat-mongodb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: librechat-mongodb
+  template:
+    metadata:
+      labels:
+        app: librechat-mongodb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      containers:
+        - name: mongodb
+          image: mongo:8.0.20
+          args: ["mongod", "--noauth"]
+          ports:
+            - containerPort: 27017
+              name: mongo
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-mongodb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat-mongodb
+  namespace: jarvis
+spec:
+  type: ClusterIP
+  selector:
+    app: librechat-mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017

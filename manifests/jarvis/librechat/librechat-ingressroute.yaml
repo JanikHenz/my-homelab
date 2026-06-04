@@ -1,7 +1,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: openwebui-ingressroute
+  name: librechat-ingressroute
   namespace: jarvis
 spec:
   entryPoints:
@@ -10,5 +10,5 @@ spec:
     - match: Host(`chat.janikhenz.ch`)
       kind: Rule
       services:
-        - name: openwebui-service
-          port: 8080
+        - name: librechat-service
+          port: 3080

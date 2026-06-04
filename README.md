@@ -8,7 +8,7 @@ Eine selbst gehostete Kubernetes-Infrastruktur auf einem **2-Node-Cluster** (Ras
 | Stack            | Namespace        | Kurzbeschreibung                                   |
 | ---------------- | ---------------- | -------------------------------------------------- |
 | Media            | `media`          | Jellyfin, Plex, *arr, qBittorrent, FlareSolverr    |
-| Jarvis           | `jarvis`         | Ollama (LLM), Open WebUI, Whisper, Piper, ChromaDB |
+| Jarvis           | `jarvis`         | Ollama (LLM), LibreChat, Whisper, Piper, ChromaDB |
 | Monitoring       | `monitoring`     | Prometheus, Grafana, node-exporter, DCGM Exporter  |
 | Home Assistant   | `home-assistant` | Smart Home                                         |
 | Nextcloud        | `nextcloud`      | Dateiablage                                        |
@@ -418,7 +418,7 @@ flowchart TD
 
 ## Jarvis Stack
 
-Lokaler KI-Stack im Namespace `jarvis` für LLM-Inferenz, Chat-Interface, Spracherkennung, Sprachausgabe und Vektorspeicher. Open WebUI bietet eine moderne Weboberfläche für Ollama mit Chat-Verlauf, Model-Management und RAG-Funktionen. Details und Betriebsregeln siehe [Jarvis Architektur (Detail)](#jarvis-architektur-detail).
+Lokaler KI-Stack im Namespace `jarvis` für LLM-Inferenz, Chat-Interface, Spracherkennung, Sprachausgabe und Vektorspeicher. LibreChat bietet eine moderne Weboberfläche für Ollama mit Chat-Verlauf, Model-Management und Agents. Details und Betriebsregeln siehe [Jarvis Architektur (Detail)](#jarvis-architektur-detail).
 
 ```mermaid
 flowchart LR
@@ -427,7 +427,7 @@ flowchart LR
 
     subgraph JARVIS["namespace: jarvis"]
         OL["Ollama\nollama.janikhenz.ch\nGPU · :11434"]
-        OW["Open WebUI\nchat.janikhenz.ch\n:8080"]
+        LC["LibreChat\nchat.janikhenz.ch\n:3080"]
         WH["Whisper\nWyoming STT · :10300"]
         PI["Piper\nWyoming TTS · :10200"]
         CH["ChromaDB\nClusterIP · :8000"]
@@ -435,6 +435,8 @@ flowchart LR
 
     USER --> TRAEFIK
     TRAEFIK --> OL
+    TRAEFIK --> LC
+    LC -.->|"intern"| OL
     WH -.->|"intern"| OL
     PI -.->|"intern"| OL
     OL --> CH
@@ -753,7 +755,7 @@ Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-R
 | Vaultwarden       | vaultwarden    | 80             | **30011** | `http://raspberrypi:30011`    | `https://vault.janikhenz.ch`         |
 | Nextcloud         | nextcloud      | 80             | **30012** | `http://homeserver:30012`     | `https://nextcloud.janikhenz.ch`     |
 | Ollama            | jarvis         | 11434          | **30013** | `http://homeserver:30013`     | `https://ollama.janikhenz.ch`        |
-| Open WebUI        | jarvis         | 8080           | **30016** | `http://homeserver:30016`     | `https://chat.janikhenz.ch`          |
+| LibreChat         | jarvis         | 3080           | **30016** | `http://homeserver:30016`     | `https://chat.janikhenz.ch`          |
 | Whisper           | jarvis         | 10300          | **30014** | `http://homeserver:30014`     | —                                    |
 | Piper             | jarvis         | 10200          | **30015** | `http://homeserver:30015`     | —                                    |
 | Prometheus        | monitoring     | 9090           | **30090** | `http://homeserver:30090`     | `https://prometheus.janikhenz.ch`    |
@@ -775,7 +777,9 @@ Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-R
 | Service          | Namespace  | Port | Konsumenten     |
 | ---------------- | ---------- | ---- | --------------- |
 | FlareSolverr     | media      | 8191 | Prowlarr        |
-| chromadb-service | jarvis     | 8000 | Jarvis / Ollama |
+| chromadb-service      | jarvis     | 8000 | Jarvis / Ollama |
+| librechat-mongodb     | jarvis     | 27017 | LibreChat       |
+| librechat-meilisearch | jarvis     | 7700  | LibreChat       |
 | node-exporter    | monitoring | 9100 | Prometheus      |
 | dcgm-exporter    | monitoring | 9400 | Prometheus      |
 
@@ -796,7 +800,7 @@ my-homelab/
 │   ├── nextcloud.yaml
 │   ├── pwd-manager.yaml
 │   ├── ollama.yaml
-│   ├── openwebui.yaml
+│   ├── librechat.yaml
 │   ├── whisper.yaml
 │   ├── piper.yaml
 │   ├── chromadb.yaml
@@ -836,7 +840,7 @@ my-homelab/
 │   │   └── flaresolverr/
 │   ├── jarvis/
 │   │   ├── ollama/
-│   │   ├── openwebui/
+│   │   ├── librechat/
 │   │   ├── whisper/
 │   │   ├── piper/
 │   │   └── chromadb/

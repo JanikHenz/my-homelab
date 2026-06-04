@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: librechat-meilisearch
+  namespace: jarvis
+  labels:
+    app: librechat-meilisearch
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: librechat-meilisearch
+  template:
+    metadata:
+      labels:
+        app: librechat-meilisearch
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      containers:
+        - name: meilisearch
+          image: getmeili/meilisearch:v1.35.1
+          env:
+            - name: MEILI_NO_ANALYTICS
+              value: "true"
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: librechat-secrets
+                  key: meili-master-key
+          ports:
+            - containerPort: 7700
+              name: http
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /meili_data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 7700
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 7700
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: librechat-meilisearch-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: librechat-meilisearch
+  namespace: jarvis
+spec:
+  type: ClusterIP
+  selector:
+    app: librechat-meilisearch
+  ports:
+    - port: 7700
+      targetPort: 7700

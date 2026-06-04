@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: openwebui
+  name: librechat
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "6"
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD
-    path: manifests/jarvis/openwebui
+    path: manifests/jarvis/librechat
   destination:
     name: homelab
     namespace: jarvis

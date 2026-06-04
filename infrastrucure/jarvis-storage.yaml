@@ -44,25 +44,71 @@ spec:
   resources: { requests: { storage: 50Gi } }
   volumeName: ollama-config-pv
 ---
-# OPEN WEBUI DATA (chat history, settings)
+# LIBRECHAT DATA (uploads, images, logs)
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: openwebui-pv
+  name: librechat-data-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/librechat/data" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-data-pvc
+  namespace: jarvis
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: librechat-data-pv
+---
+# LIBRECHAT MONGODB
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: librechat-mongodb-pv
 spec:
   storageClassName: ""
   capacity: { storage: 5Gi }
   accessModes: ["ReadWriteOnce"]
   persistentVolumeReclaimPolicy: Retain
-  hostPath: { path: "/mnt/data/openwebui" }
+  hostPath: { path: "/mnt/data/librechat/mongodb" }
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: openwebui-pvc
+  name: librechat-mongodb-pvc
   namespace: jarvis
 spec:
   storageClassName: ""
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 5Gi } }
-  volumeName: openwebui-pv
+  volumeName: librechat-mongodb-pv
+---
+# LIBRECHAT MEILISEARCH
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: librechat-meilisearch-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 2Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/librechat/meilisearch" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: librechat-meilisearch-pvc
+  namespace: jarvis
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 2Gi } }
+  volumeName: librechat-meilisearch-pv
