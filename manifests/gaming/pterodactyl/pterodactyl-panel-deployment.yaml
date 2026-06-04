@@ -32,13 +32,25 @@ spec:
                 echo "Waiting for database..."
                 sleep 2
               done
-        # Ensure proper permissions on config volume
-        - name: fix-permissions
+        # Setup required directories for Pterodactyl Panel
+        - name: setup-directories
           image: busybox:latest
           command:
             - sh
             - -c
-            - chown -R 33:33 /app/storage /app/bootstrap/cache 2>/dev/null || true
+            - |
+              # Create all required directories for Pterodactyl
+              mkdir -p /app/storage/framework/cache/data
+              mkdir -p /app/storage/framework/sessions
+              mkdir -p /app/storage/framework/views
+              mkdir -p /app/storage/logs
+              mkdir -p /app/bootstrap/cache
+              mkdir -p /app/var
+              mkdir -p /var/log/panel/logs
+              chmod -R 777 /app/storage
+              chmod -R 777 /app/bootstrap/cache
+              chmod -R 777 /app/var
+              echo "Directories created"
           volumeMounts:
             - name: config
               mountPath: /app/storage
@@ -110,6 +122,10 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /app/storage
+            - name: cache
+              mountPath: /app/bootstrap/cache
+            - name: tmp
+              mountPath: /app/var
             - name: servers
               mountPath: /var/lib/pterodactyl/volumes
           livenessProbe:
@@ -128,6 +144,10 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: pterodactyl-panel-config-pvc
+        - name: cache
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
         - name: servers
           persistentVolumeClaim:
             claimName: pterodactyl-servers-pvc

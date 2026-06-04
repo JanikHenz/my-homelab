@@ -32,6 +32,10 @@ spec:
             # Disable signup for security (first user becomes admin)
             - name: ENABLE_SIGNUP
               value: "false"
+            # Optional admin bootstrap on first start (set via secret or kubectl)
+            # - name: WEBUI_ADMIN_EMAIL
+            # - name: WEBUI_ADMIN_PASSWORD
+            # - name: WEBUI_ADMIN_NAME
             # Set default model (optional)
             - name: DEFAULT_MODELS
               value: ""

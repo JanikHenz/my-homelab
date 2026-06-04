@@ -64,24 +64,14 @@ spec:
             - name: docker-sock
               mountPath: /var/run/docker.sock
           livenessProbe:
-            httpGet:
-              path: /api/system
+            tcpSocket:
               port: 8080
-              scheme: HTTPS
-              httpHeaders:
-                - name: Authorization
-                  value: "Bearer ignored"
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 5
           readinessProbe:
-            httpGet:
-              path: /api/system
+            tcpSocket:
               port: 8080
-              scheme: HTTPS
-              httpHeaders:
-                - name: Authorization
-                  value: "Bearer ignored"
             initialDelaySeconds: 10
             periodSeconds: 10
       volumes:
