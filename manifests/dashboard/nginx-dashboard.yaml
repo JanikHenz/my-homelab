@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx-dashboard-deployment
+  name: nginx-dashboard
   labels:
     app: nginx-dashboard
 spec:
