@@ -14,6 +14,12 @@ spec:
   destination:
     name: homelab
     namespace: gaming
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: pterodactyl-secrets
+      jsonPointers:
+        - /data
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
