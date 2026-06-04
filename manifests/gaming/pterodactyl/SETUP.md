@@ -178,7 +178,7 @@ Alternativ kannst du auch andere Minecraft-Varianten importieren:
 2. **Basic Details**:
    - **Server Name**: `Minecraft-Survival`
    - **Server Owner**: Wähle deinen Account
-   - **Default Allocation**: Wähle eine verfügbare IP:Port Kombination (z.B. `homeserver:25565`)
+   - **Default Allocation**: Wähle eine verfügbare IP:Port Kombination (z.B. `192.168.1.100:25565`)
    - **Server Description**: `Mein Minecraft Survival Server`
 
 3. **Allocation Management**:
@@ -188,9 +188,14 @@ Alternativ kannst du auch andere Minecraft-Varianten importieren:
    **Hinweis zu Allocations**: Falls keine Allocations verfügbar sind, musst du zuerst welche erstellen:
    1. Gehe zu **Admin → Nodes → homeserver → Allocation**
    2. Klicke **Create New Allocations**
-   3. **IP Address**: `0.0.0.0` (für alle Interfaces)
+   3. **IP Address**: `192.168.1.100` (die IP-Adresse deines Homeservers im lokalen Netz)
    4. **Ports**: `25565-25575` (Portbereich für Minecraft Server)
    5. Klicke **Submit**
+   
+   **IP-Adresse ermitteln**: Falls du die IP nicht kennst, führe auf dem Homeserver aus:
+   ```bash
+   ip addr show | grep "inet " | grep -v 127.0.0.1
+   ```
 
 4. **Application Feature Limits**:
    - **Database Limit**: `0` (keine Datenbanken benötigt)
@@ -306,7 +311,7 @@ Automatische Backups können über Cron-Jobs oder Plugins wie **AutoSaveWorld** 
 
 1. Öffne Minecraft (Java Edition)
 2. Gehe zu **Multiplayer → Add Server**
-3. **Server Address**: `homeserver:25565` (oder die zugewiesene Port-Nummer)
+3. **Server Address**: `192.168.1.100:25565` (oder die IP und Port-Nummer deines Servers)
 4. Teste die Verbindung
 
 ## Minecraft Server Troubleshooting
