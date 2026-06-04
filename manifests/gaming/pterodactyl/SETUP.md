@@ -80,11 +80,14 @@ Beim ersten Zugriff wird ein Setup-Bildschirm angezeigt:
    Name: homeserver
    Description: Homeserver Kubernetes Node
    Location: Home
-   FQDN: homeserver
+   FQDN: 192.168.1.100 (IP-Adresse des Homeservers)
    Communication: HTTP (für internes Netz)
    Behind Proxy: Yes (wegen Cloudflare/Treafik)
+   Daemon Port: 8080
    ```
 3. Speichere die Node
+
+**Wichtig**: Verwende die IP-Adresse statt "homeserver" als FQDN, um Verbindungsprobleme zu vermeiden.
 
 ### 4.2 Konfiguration generieren
 
@@ -350,6 +353,55 @@ Automatische Backups können über Cron-Jobs oder Plugins wie **AutoSaveWorld** 
 3. **Logs prüfen**: Fehlermeldungen im Console Tab analysieren
 
 ## Troubleshooting
+
+### "Could not establish a connection to the machine running this server"
+
+Dieser Fehler tritt auf, wenn das Pterodactyl Panel keine Verbindung zu Wings herstellen kann:
+
+**1. Node-Konfiguration prüfen:**
+1. Gehe zu **Admin → Nodes → homeserver**
+2. Prüfe die **Configuration** Tab:
+   - **FQDN**: Muss die IP-Adresse oder ein erreichbarer Hostname sein
+   - **Daemon Port**: Standard ist `8080`
+   - **Communication**: Sollte auf `HTTP` stehen (für lokales Netz)
+
+**2. FQDN korrigieren:**
+Falls "homeserver" nicht auflösbar ist, ändere es zur IP-Adresse:
+1. **Admin → Nodes → homeserver → Settings**
+2. **FQDN**: Ändere zu `192.168.1.100` (deine Homeserver-IP)
+3. **Save**
+
+**3. Wings-Konfiguration neu generieren:**
+1. Gehe zu **Admin → Nodes → homeserver → Configuration**
+2. Kopiere die neue Konfiguration
+3. Aktualisiere die Wings config.yml:
+   ```bash
+   # Auf dem Homeserver
+   sudo nano /mnt/data/pterodactyl/wings/config/config.yml
+   ```
+4. Wings neustarten:
+   ```bash
+   kubectl rollout restart deployment pterodactyl-wings -n gaming
+   ```
+
+**4. Netzwerk-Konnektivität testen:**
+```bash
+# Vom Panel-Pod aus Wings testen
+kubectl exec -it -n gaming deployment/pterodactyl-panel -- curl -v http://192.168.1.100:8080
+
+# Wings-Port prüfen
+kubectl get svc -n gaming | grep wings
+```
+
+**5. Wings-Logs prüfen:**
+```bash
+kubectl logs -n gaming deployment/pterodactyl-wings -f
+```
+
+Häufige Lösungen:
+- FQDN von "homeserver" zu IP-Adresse ändern
+- Port 8080 in der Firewall freigeben
+- Wings-Service auf korrekten Port prüfen
 
 ### Wings zeigt "Offline"
 
