@@ -56,7 +56,7 @@ spec:
               mountPath: /app/storage
       containers:
         - name: panel
-          image: ghcr.io/pterodactyl/panel:v1.11.7
+          image: ghcr.io/pterodactyl/panel:v1.12.4
           env:
             - name: APP_URL
               value: "https://pterodactyl.janikhenz.ch"
