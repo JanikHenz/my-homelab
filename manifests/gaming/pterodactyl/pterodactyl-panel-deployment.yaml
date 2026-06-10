@@ -127,7 +127,7 @@ spec:
             - name: tmp
               mountPath: /app/var
             - name: servers
-              mountPath: /var/lib/pterodactyl/volumes
+              mountPath: /mnt/data/pterodactyl/servers
           livenessProbe:
             httpGet:
               path: /health

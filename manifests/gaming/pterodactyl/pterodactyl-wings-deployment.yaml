@@ -57,9 +57,9 @@ spec:
             - name: config
               mountPath: /etc/pterodactyl
             - name: servers
-              mountPath: /var/lib/pterodactyl/volumes
+              mountPath: /mnt/data/pterodactyl/servers
             - name: tmp
-              mountPath: /tmp
+              mountPath: /mnt/data/pterodactyl/tmp
             # Mount Docker socket for container management
             - name: docker-sock
               mountPath: /var/run/docker.sock
@@ -82,7 +82,9 @@ spec:
           persistentVolumeClaim:
             claimName: pterodactyl-servers-pvc
         - name: tmp
-          emptyDir: {}
+          hostPath:
+            path: /mnt/data/pterodactyl/tmp
+            type: DirectoryOrCreate
         - name: docker-sock
           hostPath:
             path: /var/run/docker.sock
