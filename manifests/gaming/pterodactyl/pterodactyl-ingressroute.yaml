@@ -12,3 +12,20 @@ spec:
       services:
         - name: pterodactyl-panel-service
           port: 80
+---
+# Wings API / WebSocket (Konsole im Panel). Browser spricht HTTPS,
+# Traefik leitet auf Wings Port 8080 weiter.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pterodactyl-wings-ingressroute
+  namespace: gaming
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`wings.janikhenz.ch`)
+      kind: Rule
+      services:
+        - name: pterodactyl-wings-service
+          port: 8080
