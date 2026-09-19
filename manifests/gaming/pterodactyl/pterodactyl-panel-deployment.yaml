@@ -47,6 +47,10 @@ spec:
               mkdir -p /app/bootstrap/cache
               mkdir -p /app/var
               mkdir -p /var/log/panel/logs
+              # Entrypoint may create root-owned cache dirs; keep storage world-writable
+              # so php-fpm (www-data) can write after migrate/seed runs as root.
+              rm -rf /app/storage/framework/cache/data/*
+              chown -R 82:82 /app/storage || true
               chmod -R 777 /app/storage
               chmod -R 777 /app/bootstrap/cache
               chmod -R 777 /app/var
@@ -89,11 +93,11 @@ spec:
                 secretKeyRef:
                   name: pterodactyl-secrets
                   key: mariadb-password
-            # Redis (using in-container for now)
+            # Avoid file cache owned by root after container entrypoint migrate/seed
             - name: CACHE_DRIVER
-              value: "file"
+              value: "array"
             - name: SESSION_DRIVER
-              value: "file"
+              value: "database"
             - name: QUEUE_DRIVER
               value: "sync"
             # Mail (disabled for now)

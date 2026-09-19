@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: syncthing
+  namespace: syncthing
+  labels:
+    app: syncthing
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: syncthing
+  template:
+    metadata:
+      labels:
+        app: syncthing
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      # TCP/UDP Sync und Discovery brauchen Host-Ports (wie Wings)
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: syncthing
+          image: syncthing/syncthing:latest
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "Europe/Zurich"
+            - name: STGUIADDRESS
+              value: "0.0.0.0:8384"
+          ports:
+            - containerPort: 8384
+              name: web-gui
+              protocol: TCP
+            - containerPort: 22000
+              name: sync-tcp
+              protocol: TCP
+            - containerPort: 22000
+              name: sync-udp
+              protocol: UDP
+            - containerPort: 21027
+              name: discovery
+              protocol: UDP
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/syncthing
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: syncthing-data-pvc

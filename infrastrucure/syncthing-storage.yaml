@@ -1,0 +1,22 @@
+# SYNCTHING / OBSIDIAN DATA
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: syncthing-data-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 5Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath: { path: "/mnt/data/obsidian" }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: syncthing-data-pvc
+  namespace: syncthing
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 5Gi } }
+  volumeName: syncthing-data-pv
