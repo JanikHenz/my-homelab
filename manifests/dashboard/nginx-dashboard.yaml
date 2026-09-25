@@ -19,7 +19,7 @@ spec:
         kubernetes.io/hostname: raspberrypi
       containers:
         - name: dashboard
-          image: ghcr.io/janikhenz/dashboard:latest
+          image: ghcr.io/janikhenz/dashboard2:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
