@@ -8,7 +8,35 @@ spec:
   selector:
     app: syncthing
   ports:
-    - protocol: TCP
+    - name: web-gui
+      protocol: TCP
       port: 8384
       targetPort: 8384
       nodePort: 30021
+---
+# Sync/Discovery für Geräte im LAN (nicht über Traefik/HTTP)
+apiVersion: v1
+kind: Service
+metadata:
+  name: syncthing-sync
+  namespace: syncthing
+spec:
+  type: NodePort
+  selector:
+    app: syncthing
+  ports:
+    - name: sync-tcp
+      protocol: TCP
+      port: 22000
+      targetPort: 22000
+      nodePort: 30200
+    - name: sync-udp
+      protocol: UDP
+      port: 22000
+      targetPort: 22000
+      nodePort: 30200
+    - name: discovery
+      protocol: UDP
+      port: 21027
+      targetPort: 21027
+      nodePort: 30227

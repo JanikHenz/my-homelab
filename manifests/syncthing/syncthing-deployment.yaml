@@ -19,9 +19,6 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
-      # TCP/UDP Sync und Discovery brauchen Host-Ports (wie Wings)
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: syncthing
           image: syncthing/syncthing:latest

@@ -1,0 +1,21 @@
+# Referenz-Werte für Helm-Upgrades von Argo CD (nicht von ArgoCD selbst gesynct).
+# Live-Cluster wurde entsprechend gesetzt. Bei `helm upgrade` diese Keys mitgeben,
+# sonst überschreibt Helm url/insecure wieder.
+#
+# Beispiel:
+#   helm upgrade argocd argo/argo-cd -n argocd -f docs/argocd-helm-values-snippet.yaml
+#
+global:
+  domain: argocd.janikhenz.ch
+
+configs:
+  cm:
+    url: https://argocd.janikhenz.ch
+  params:
+    server.insecure: true
+
+server:
+  nodeSelector:
+    kubernetes.io/hostname: raspberrypi
+  service:
+    type: NodePort
