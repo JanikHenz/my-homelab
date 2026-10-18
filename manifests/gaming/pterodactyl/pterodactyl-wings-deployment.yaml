@@ -58,6 +58,10 @@ spec:
               mountPath: /etc/pterodactyl
             - name: servers
               mountPath: /mnt/data/pterodactyl/servers
+            - name: backups
+              mountPath: /mnt/data/pterodactyl/backups
+            - name: archives
+              mountPath: /mnt/data/pterodactyl/archives
             - name: tmp
               mountPath: /mnt/data/pterodactyl/tmp
             # Mount Docker socket for container management
@@ -81,6 +85,14 @@ spec:
         - name: servers
           persistentVolumeClaim:
             claimName: pterodactyl-servers-pvc
+        - name: backups
+          hostPath:
+            path: /mnt/data/pterodactyl/backups
+            type: DirectoryOrCreate
+        - name: archives
+          hostPath:
+            path: /mnt/data/pterodactyl/archives
+            type: DirectoryOrCreate
         - name: tmp
           hostPath:
             path: /mnt/data/pterodactyl/tmp
