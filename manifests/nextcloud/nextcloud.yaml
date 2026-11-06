@@ -20,7 +20,7 @@ spec:
         kubernetes.io/hostname: homeserver
       containers:
         - name: nextcloud
-          image: nextcloud:latest
+          image: nextcloud:35.0.2
           ports:
             - containerPort: 80
           resources:
