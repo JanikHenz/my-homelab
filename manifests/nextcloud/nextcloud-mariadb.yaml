@@ -1,0 +1,89 @@
+# MariaDB Database for Nextcloud
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-mariadb
+  namespace: nextcloud
+  labels:
+    app: nextcloud-mariadb
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nextcloud-mariadb
+  template:
+    metadata:
+      labels:
+        app: nextcloud-mariadb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      containers:
+        - name: mariadb
+          image: mariadb:10.11
+          args:
+            - "--transaction-isolation=READ-COMMITTED"
+            - "--log-bin=OFF"
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-secrets
+                  key: mariadb-root-password
+            - name: MYSQL_DATABASE
+              value: nextcloud
+            - name: MYSQL_USER
+              value: nextcloud
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud-secrets
+                  key: mariadb-password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nextcloud-mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-mariadb
+  namespace: nextcloud
+spec:
+  type: ClusterIP
+  selector:
+    app: nextcloud-mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306

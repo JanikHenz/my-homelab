@@ -490,12 +490,14 @@ Prometheus sammelt Metriken vom Cluster, node-exporter liefert Host-Metriken und
 
 | Eigenschaft | Wert                             |
 | ----------- | -------------------------------- |
-| Image       | `nextcloud:latest`               |
+| Image       | `nextcloud:35.0.2`               |
+| Datenbank   | `mariadb:10.11`                  |
 | Node        | `homeserver`                     |
 | Port        | 80                               |
 | NodePort    | 30012                            |
 | URL         | `https://nextcloud.janikhenz.ch` |
 | Data-PVC    | `nextcloud-data-pvc` (100 Gi)    |
+| DB-PVC      | `nextcloud-mariadb-pvc` (10 Gi)  |
 
 
 ---
@@ -675,6 +677,7 @@ flowchart LR
 | `grafana-pvc`               | 2 Gi   | RWO         | `/mnt/data/grafana`               | Grafana                              |
 | `home-assistant-config-pvc` | 5 Gi   | RWO         | `/mnt/data/home-assistant/config` | Home Assistant                       |
 | `nextcloud-data-pvc`        | 100 Gi | RWO         | `/mnt/data/nextcloud/data`        | Nextcloud                            |
+| `nextcloud-mariadb-pvc`     | 10 Gi  | RWO         | `/mnt/data/nextcloud/database`    | Nextcloud MariaDB                    |
 | `vaultwarden-data-pvc`      | 1 Gi   | RWO         | `/mnt/data/vaultwarden/data`      | Vaultwarden                          |
 
 
@@ -847,6 +850,11 @@ my-homelab/
 │   ├── monitoring/
 │   ├── home-assistant/
 │   ├── nextcloud/
+│   │   ├── nextcloud.yaml
+│   │   ├── nextcloud-service.yaml
+│   │   ├── nextcloud-ingressroute.yaml
+│   │   ├── nextcloud-mariadb.yaml
+│   │   └── nextcloud-secrets.yaml.template
 │   ├── pwd-manager/
 │   └── gaming/
 │       └── pterodactyl/

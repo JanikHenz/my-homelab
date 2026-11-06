@@ -14,6 +14,12 @@ spec:
   destination:
     name: homelab
     namespace: nextcloud
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: nextcloud-secrets
+      jsonPointers:
+        - /data
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

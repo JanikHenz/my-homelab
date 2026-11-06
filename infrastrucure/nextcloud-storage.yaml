@@ -20,3 +20,28 @@ spec:
   accessModes: ["ReadWriteOnce"]
   resources: { requests: { storage: 100Gi } }
   volumeName: nextcloud-data-pv
+---
+# NEXTCLOUD DATABASE (MariaDB)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nextcloud-mariadb-pv
+spec:
+  storageClassName: ""
+  capacity: { storage: 10Gi }
+  accessModes: ["ReadWriteOnce"]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/nextcloud/database"
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-mariadb-pvc
+  namespace: nextcloud
+spec:
+  storageClassName: ""
+  accessModes: ["ReadWriteOnce"]
+  resources: { requests: { storage: 10Gi } }
+  volumeName: nextcloud-mariadb-pv
