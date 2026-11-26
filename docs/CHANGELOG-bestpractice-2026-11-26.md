@@ -13,7 +13,7 @@ Manuelle Schritte: [`MANUAL-STEPS-bestpractice-2026-11-26.md`](MANUAL-STEPS-best
 |---|---|---|
 | 1 | AppProjects `infrastructure`, `platform`, `apps` | neu `apps/projects.yaml`, `apps/applicationset.yaml`, `apps/infrastructure.yaml` |
 | 2 | Auto-Sync (prune + selfHeal) für alle 21 Apps | `apps/applicationset.yaml` |
-| 3 | 11 Services NodePort → ClusterIP, Kommentare bei den übrigen | 19 Dateien in `manifests/` |
+| 3 | 12 Services NodePort → ClusterIP, Kommentare bei den übrigen | 19 Dateien in `manifests/` |
 | 4 | ArgoCD verwaltet sich selbst | neu `apps/argocd.yaml`, gelöscht `docs/argocd-helm-values-snippet.yaml` |
 | 5 | README: Sync-Policy, AppProjects, Ports, Struktur | `README.md` |
 | – | **Nicht umgesetzt:** dynamischer Storage | siehe unten |
@@ -28,7 +28,7 @@ Manuelle Schritte: [`MANUAL-STEPS-bestpractice-2026-11-26.md`](MANUAL-STEPS-best
 | Wie skaliert/startet das Dashboard Apps? | nur `POST /api/k8s/scale` (replicas), kein Restart-Patch | kein Konflikt mit selfHeal, da `replicas` ignoriert wird |
 | Woher holt das Dashboard Prometheus? | primär `prometheus-service.monitoring.svc.cluster.local:9090`, NodePort 30090 nur Fallback | NodePort 30090 entbehrlich |
 | Home Assistant → KI-Dienste | Ollama `http://192.168.1.9:30013`, Wyoming `:30014` (Whisper), `:30015` (Piper) | diese NodePorts bleiben |
-| Radarr → qBittorrent | `192.168.1.9:30007` (Sonarr nutzt intern `qbittorrent-service:8080`) | 30007 bleibt vorerst |
+| Radarr → qBittorrent | anfangs `192.168.1.9:30007`; von dir auf `qbittorrent-service:8080` umgestellt (in Radarrs DB bestätigt, Service vom Radarr-Pod erreichbar) | 30007 entfernt |
 | Wings → Panel | `http://192.168.1.9:30020` | bleibt |
 | Sonarr/Radarr/Prowlarr/Jellyseerr untereinander | alle über interne Service-Namen | – |
 | ArgoCD-Installation | Helm-Chart `argo-cd 9.4.7` (App v3.3.2), Werte: `global.nodeSelector`, NodePort 30800/30443; zusätzlich per `kubectl patch`: `url`, `server.insecure` | Werte für Selbstverwaltung = Helm-Werte + Patches |
@@ -58,7 +58,7 @@ In der ApplicationSet-Vorlage: `automated: { prune: true, selfHeal: true }`.
 
 ## 3. NodePort → ClusterIP
 
-**Umgestellt (11):** nginx-dashboard (30080), jellyseerr (30003), radarr (30004),
+**Umgestellt (12):** nginx-dashboard (30080), qbittorrent-WebUI (30007, nachdem Radarr auf `qbittorrent-service:8080` umgestellt wurde), jellyseerr (30003), radarr (30004),
 sonarr (30005), prowlarr (30006), vaultwarden (30011), nextcloud (30012), librechat (30016),
 syncthing-GUI (30021), prometheus (30090), grafana (30091). Zusätzlich argocd-server
 (30800/30443) über `apps/argocd.yaml`.
@@ -76,7 +76,6 @@ gleich, es entfällt nur der Port auf den Nodes.
 | home-assistant | 30009 | Companion-App im LAN |
 | ollama / whisper / piper | 30013 / 30014 / 30015 | Home-Assistant-Integrationen |
 | pterodactyl-panel | 30020 | Wings (hostNetwork) |
-| qbittorrent (WebUI) | 30007 | Radarr – **TODO**, siehe Manual Steps |
 | qbittorrent-torrent | 30008 | Torrent-Peers |
 | syncthing-sync | 30200 / 30227 | Geräte-Sync |
 

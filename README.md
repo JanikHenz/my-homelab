@@ -416,7 +416,7 @@ flowchart TD
 | Radarr       | `linuxserver/radarr:latest`                | 7878  | —        | `radarr.janikhenz.ch`     |     |
 | Sonarr       | `linuxserver/sonarr:latest`                | 8989  | —        | `sonarr.janikhenz.ch`     |     |
 | Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | —        | `prowlarr.janikhenz.ch`   |     |
-| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    | `qbt.janikhenz.ch`        |     |
+| qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | —        | `qbt.janikhenz.ch`        |     |
 | FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | —        | intern                    |     |
 
 
@@ -747,7 +747,7 @@ Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-R
 
 ## Port-Übersicht
 
-Alle HTTP-Services sind über Traefik + Cloudflare Tunnel (Subdomain) erreichbar. Einen **NodePort** haben nur noch Dienste, die im LAN direkt per IP gebraucht werden (TV-Apps, Home-Assistant-App, Home Assistant → Ollama/Whisper/Piper, Wings → Panel, Radarr → qBittorrent) sowie Torrent und Syncthing. Der Grund steht jeweils als Kommentar im Service.
+Alle HTTP-Services sind über Traefik + Cloudflare Tunnel (Subdomain) erreichbar. Einen **NodePort** haben nur noch Dienste, die im LAN direkt per IP gebraucht werden (TV-Apps, Home-Assistant-App, Home Assistant → Ollama/Whisper/Piper, Wings → Panel) sowie Torrent und Syncthing. Der Grund steht jeweils als Kommentar im Service.
 
 ### Öffentlicher Zugang (NodePort + Traefik IngressRoute)
 
@@ -761,7 +761,7 @@ Alle HTTP-Services sind über Traefik + Cloudflare Tunnel (Subdomain) erreichbar
 | Radarr            | media          | 7878           | —         | —                             | `https://radarr.janikhenz.ch`        |
 | Sonarr            | media          | 8989           | —         | —                             | `https://sonarr.janikhenz.ch`        |
 | Prowlarr          | media          | 9696           | —         | —                             | `https://prowlarr.janikhenz.ch`      |
-| qBittorrent WebUI | media          | 8080           | **30007** | `http://homeserver:30007`     | `https://qbt.janikhenz.ch`           |
+| qBittorrent WebUI | media          | 8080           | —         | —                             | `https://qbt.janikhenz.ch`           |
 | Home Assistant    | home-assistant | 8123           | **30009** | `http://homeserver:30009`     | `https://homeassistant.janikhenz.ch` |
 | Vaultwarden       | vaultwarden    | 80             | —         | —                             | `https://vault.janikhenz.ch`         |
 | Nextcloud         | nextcloud      | 80             | —         | —                             | `https://nextcloud.janikhenz.ch`     |

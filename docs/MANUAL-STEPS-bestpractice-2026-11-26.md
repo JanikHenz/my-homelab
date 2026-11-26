@@ -31,7 +31,7 @@ Ab jetzt läuft alles automatisch, innerhalb von ~3 Minuten:
 2. Das ApplicationSet ordnet die Apps ihren Projekten zu und schaltet Auto-Sync ein.
 3. Alle Apps syncen sich selbst:
    - `monitoring`: Prometheus und node-exporter starten neu.
-   - 11 Services verlieren ihren NodePort.
+   - 12 Services verlieren ihren NodePort.
 4. Neue Kachel `argocd` (OutOfSync, **kein** Auto-Sync). Siehe Schritt 4.
 
 ## 3. Kontrolle
@@ -39,7 +39,7 @@ Ab jetzt läuft alles automatisch, innerhalb von ~3 Minuten:
 ```bash
 kubectl -n argocd get appprojects
 kubectl -n argocd get applications -o custom-columns='NAME:.metadata.name,PROJECT:.spec.project,SYNC:.status.sync.status,HEALTH:.status.health.status,AUTO:.spec.syncPolicy.automated'
-kubectl get svc -A | grep NodePort        # nur noch die 10 gewollten (plus traefik/argocd-server)
+kubectl get svc -A | grep NodePort        # nur noch die 9 gewollten (plus argocd-server bis Schritt 4)
 ```
 
 Erwartet: Alle Apps sind `Synced/Healthy`. `argocd` steht auf OutOfSync, `infrastructure` auf Synced.
@@ -47,7 +47,7 @@ Erwartet: Alle Apps sind `Synced/Healthy`. `argocd` steht auf OutOfSync, `infras
 nur der Sync dieser App schlägt fehl.
 
 Funktionstest: `https://janikhenz.ch` (Dashboard), Jellyfin per TV, Home Assistant → Sprachassistent
-(Whisper/Piper/Ollama), Radarr → Download starten.
+(Whisper/Piper/Ollama), Radarr → *Settings → Download Clients → Test*.
 
 ## 4. ArgoCD selbst übernehmen (manuell, mit Bedacht)
 
@@ -85,7 +85,10 @@ helm upgrade argocd argo/argo-cd --version 9.4.7 -n argocd -f /tmp/argocd-values
 
 Die UI ist dann auch direkt über `http://192.168.1.10:30800` erreichbar.
 
-## 5. Radarr auf internen qBittorrent umstellen, danach NodePort 30007 entfernen
+## 5. ~~Radarr auf internen qBittorrent umstellen, danach NodePort 30007 entfernen~~ ✅ erledigt
+
+Radarr wurde von dir auf `qbittorrent-service:8080` umgestellt; Claude hat danach den NodePort 30007
+aus `qbittorrent-service.yaml` entfernt (Teil desselben Commits). Ursprüngliche Anleitung:
 
 1. Radarr → *Settings → Download Clients → qBittorrent*:
    Host `qbittorrent-service`, Port `8080`, dann **Test** und **Save**. So ist es bei Sonarr schon eingestellt.
