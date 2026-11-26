@@ -219,20 +219,67 @@
       font-weight: 600;
     }
 
-    /* Mermaid diagrams */
-    .mermaid-wrapper {
+    /* Diagrams (SVG) and screenshots */
+    .content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .content p[align="center"] {
+      text-align: center;
+      margin: 8px 0 24px;
+    }
+
+    /* Wide tables scroll horizontally instead of breaking the layout */
+    .content .table-wrap {
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    .content .table-wrap table {
+      margin-bottom: 0;
+    }
+
+    .content table td img {
+      display: block;
+    }
+
+    /* Notes ("> ...") */
+    .content blockquote {
+      border-left: 3px solid var(--accent);
+      background: var(--bg-secondary);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 16px;
+      margin: 0 0 16px;
+      color: var(--text-muted);
+    }
+
+    .content blockquote p {
+      margin: 0;
+      color: var(--text-muted);
+    }
+
+    /* Collapsible blocks (<details>) */
+    .content details {
       background: var(--bg-secondary);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 24px;
+      padding: 10px 16px;
       margin-bottom: 16px;
-      overflow-x: auto;
-      display: flex;
-      justify-content: center;
     }
 
-    .mermaid {
-      max-width: 100%;
+    .content details summary {
+      cursor: pointer;
+    }
+
+    .content details[open] summary {
+      margin-bottom: 12px;
+    }
+
+    nav ul li.sub a {
+      padding-left: 20px;
+      font-size: 13px;
     }
 
     @media (max-width: 900px) {

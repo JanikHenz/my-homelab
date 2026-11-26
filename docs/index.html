@@ -4,8 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Homelab</title>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -21,24 +20,13 @@
 <div class="layout">
   <nav>
     <h3>Dokumentation</h3>
-    <ul>
-      <li><a href="#netzwerk-topologie">Netzwerk-Topologie</a></li>
-      <li><a href="#hardware--cluster">Hardware & Cluster</a></li>
-      <li><a href="#gitops-architektur">GitOps-Architektur</a></li>
-      <li><a href="#media-stack">Media Stack</a></li>
-      <li><a href="#fitness-stack-wger">Fitness Stack</a></li>
-      <li><a href="#dashboard">Dashboard</a></li>
-      <li><a href="#storage-bersicht">Storage-Übersicht</a></li>
-      <li><a href="#nvidia-gpu">NVIDIA GPU</a></li>
-      <li><a href="#port-bersicht">Port-Übersicht</a></li>
-      <li><a href="#verzeichnisstruktur">Verzeichnisstruktur</a></li>
-    </ul>
+    <!-- filled from the README headings by js/script.js -->
+    <ul id="toc"></ul>
   </nav>
   <main>
     <div class="content" id="content"></div>
   </main>
 </div>
-<script src="js/script.js">
-</script>
+<script src="js/script.js"></script>
 </body>
 </html>
