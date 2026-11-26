@@ -1,8 +1,3 @@
-# Cluster-wide resources (Helm chart in infrastructure/): namespaces,
-# PersistentVolumes/Claims, NVIDIA device plugin.
-# Kept separate from applicationset.yaml on purpose: it has no destination
-# namespace and must ALWAYS be synced by hand and WITHOUT prune.
-# When deleting this Application, ALWAYS choose "Non-cascading".
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

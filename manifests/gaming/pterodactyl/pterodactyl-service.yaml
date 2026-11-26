@@ -1,11 +1,9 @@
-# Pterodactyl Panel Service
 apiVersion: v1
 kind: Service
 metadata:
   name: pterodactyl-panel-service
   namespace: gaming
 spec:
-  # NodePort: Wings (hostNetwork) fetches its config from http://192.168.1.9:30020
   type: NodePort
   selector:
     app: pterodactyl-panel
@@ -14,9 +12,6 @@ spec:
       port: 80
       nodePort: 30020
 ---
-# Pterodactyl Wings Service
-# Note: Wings uses hostNetwork, so this service is mainly for internal reference
-# The Wings API is accessible on the node directly via host networking
 apiVersion: v1
 kind: Service
 metadata:

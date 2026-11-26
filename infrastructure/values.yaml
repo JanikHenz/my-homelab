@@ -1,11 +1,3 @@
-# Cluster-wide resources, rendered by templates/*.yaml.
-# Sync the ArgoCD app "infrastructure" by hand and WITHOUT prune.
-#
-# CAUTION: PersistentVolumes are (mostly) immutable. Never rename an existing
-# entry or change its path – add a new one instead. Data lives on the host
-# under /mnt/data and is never deleted by Kubernetes (reclaim policy Retain).
-
-# Namespaces are protected: ArgoCD never deletes or prunes them.
 namespaces:
   - media
   - monitoring
@@ -16,39 +8,141 @@ namespaces:
   - gaming
   - syncthing
 
-# One entry = PersistentVolume "<name>-pv" + PersistentVolumeClaim "<name>-pvc".
-#   accessMode:   default ReadWriteOnce
-#   hostPathType: optional (e.g. DirectoryOrCreate)
 volumes:
-  # media
-  - { name: jellyfin-config,          namespace: media,          size: 10Gi,  path: /mnt/data/jellyfin/config }
-  - { name: plex-config,              namespace: media,          size: 10Gi,  path: /mnt/data/plex/config }
-  - { name: radarr-config,            namespace: media,          size: 1Gi,   path: /mnt/data/radarr/config }
-  - { name: sonarr-config,            namespace: media,          size: 1Gi,   path: /mnt/data/sonarr/config }
-  - { name: qbittorrent-config,       namespace: media,          size: 1Gi,   path: /mnt/data/qbittorrent/config }
-  - { name: prowlarr-config,          namespace: media,          size: 1Gi,   path: /mnt/data/prowlarr/config }
-  - { name: jellyseerr-config,        namespace: media,          size: 5Gi,   path: /mnt/data/jellyseerr/config }
-  - { name: global-media,             namespace: media,          size: 500Gi, path: /mnt/data/media, accessMode: ReadWriteMany }
-  # jarvis
-  - { name: chromadb,                 namespace: jarvis,         size: 5Gi,   path: /mnt/data/chromadb }
-  - { name: ollama-config,            namespace: jarvis,         size: 50Gi,  path: /mnt/data/ollama/config }
-  - { name: librechat-data,           namespace: jarvis,         size: 10Gi,  path: /mnt/data/librechat/data }
-  - { name: librechat-mongodb,        namespace: jarvis,         size: 5Gi,   path: /mnt/data/librechat/mongodb }
-  - { name: librechat-meilisearch,    namespace: jarvis,         size: 2Gi,   path: /mnt/data/librechat/meilisearch }
-  # monitoring
-  - { name: prometheus,               namespace: monitoring,     size: 10Gi,  path: /mnt/data/prometheus }
-  - { name: grafana,                  namespace: monitoring,     size: 2Gi,   path: /mnt/data/grafana }
-  # home-assistant
-  - { name: home-assistant-config,    namespace: home-assistant, size: 5Gi,   path: /mnt/data/home-assistant/config }
-  # nextcloud
-  - { name: nextcloud-data,           namespace: nextcloud,      size: 100Gi, path: /mnt/data/nextcloud/data }
-  - { name: nextcloud-mariadb,        namespace: nextcloud,      size: 10Gi,  path: /mnt/data/nextcloud/database, hostPathType: DirectoryOrCreate }
-  # vaultwarden
-  - { name: vaultwarden-data,         namespace: vaultwarden,    size: 1Gi,   path: /mnt/data/vaultwarden/data }
-  # gaming (pterodactyl)
-  - { name: pterodactyl-panel-config, namespace: gaming,         size: 5Gi,   path: /mnt/data/pterodactyl/panel/config }
-  - { name: pterodactyl-mariadb,      namespace: gaming,         size: 10Gi,  path: /mnt/data/pterodactyl/panel/database }
-  - { name: pterodactyl-wings-config, namespace: gaming,         size: 5Gi,   path: /mnt/data/pterodactyl/wings/config }
-  - { name: pterodactyl-servers,      namespace: gaming,         size: 100Gi, path: /mnt/data/pterodactyl/servers, accessMode: ReadWriteMany }
-  # syncthing (obsidian vault)
-  - { name: syncthing-data,           namespace: syncthing,      size: 5Gi,   path: /mnt/data/obsidian }
+  - {
+      name: jellyfin-config,
+      namespace: media,
+      size: 10Gi,
+      path: /mnt/data/jellyfin/config,
+    }
+  - {
+      name: plex-config,
+      namespace: media,
+      size: 10Gi,
+      path: /mnt/data/plex/config,
+    }
+  - {
+      name: radarr-config,
+      namespace: media,
+      size: 1Gi,
+      path: /mnt/data/radarr/config,
+    }
+  - {
+      name: sonarr-config,
+      namespace: media,
+      size: 1Gi,
+      path: /mnt/data/sonarr/config,
+    }
+  - {
+      name: qbittorrent-config,
+      namespace: media,
+      size: 1Gi,
+      path: /mnt/data/qbittorrent/config,
+    }
+  - {
+      name: prowlarr-config,
+      namespace: media,
+      size: 1Gi,
+      path: /mnt/data/prowlarr/config,
+    }
+  - {
+      name: jellyseerr-config,
+      namespace: media,
+      size: 5Gi,
+      path: /mnt/data/jellyseerr/config,
+    }
+  - {
+      name: global-media,
+      namespace: media,
+      size: 500Gi,
+      path: /mnt/data/media,
+      accessMode: ReadWriteMany,
+    }
+  - { name: chromadb, namespace: jarvis, size: 5Gi, path: /mnt/data/chromadb }
+  - {
+      name: ollama-config,
+      namespace: jarvis,
+      size: 50Gi,
+      path: /mnt/data/ollama/config,
+    }
+  - {
+      name: librechat-data,
+      namespace: jarvis,
+      size: 10Gi,
+      path: /mnt/data/librechat/data,
+    }
+  - {
+      name: librechat-mongodb,
+      namespace: jarvis,
+      size: 5Gi,
+      path: /mnt/data/librechat/mongodb,
+    }
+  - {
+      name: librechat-meilisearch,
+      namespace: jarvis,
+      size: 2Gi,
+      path: /mnt/data/librechat/meilisearch,
+    }
+  - {
+      name: prometheus,
+      namespace: monitoring,
+      size: 10Gi,
+      path: /mnt/data/prometheus,
+    }
+  - { name: grafana, namespace: monitoring, size: 2Gi, path: /mnt/data/grafana }
+  - {
+      name: home-assistant-config,
+      namespace: home-assistant,
+      size: 5Gi,
+      path: /mnt/data/home-assistant/config,
+    }
+  - {
+      name: nextcloud-data,
+      namespace: nextcloud,
+      size: 100Gi,
+      path: /mnt/data/nextcloud/data,
+    }
+  - {
+      name: nextcloud-mariadb,
+      namespace: nextcloud,
+      size: 10Gi,
+      path: /mnt/data/nextcloud/database,
+      hostPathType: DirectoryOrCreate,
+    }
+  - {
+      name: vaultwarden-data,
+      namespace: vaultwarden,
+      size: 1Gi,
+      path: /mnt/data/vaultwarden/data,
+    }
+  - {
+      name: pterodactyl-panel-config,
+      namespace: gaming,
+      size: 5Gi,
+      path: /mnt/data/pterodactyl/panel/config,
+    }
+  - {
+      name: pterodactyl-mariadb,
+      namespace: gaming,
+      size: 10Gi,
+      path: /mnt/data/pterodactyl/panel/database,
+    }
+  - {
+      name: pterodactyl-wings-config,
+      namespace: gaming,
+      size: 5Gi,
+      path: /mnt/data/pterodactyl/wings/config,
+    }
+  - {
+      name: pterodactyl-servers,
+      namespace: gaming,
+      size: 100Gi,
+      path: /mnt/data/pterodactyl/servers,
+      accessMode: ReadWriteMany,
+    }
+  - {
+      name: syncthing-data,
+      namespace: syncthing,
+      size: 5Gi,
+      path: /mnt/data/obsidian,
+    }

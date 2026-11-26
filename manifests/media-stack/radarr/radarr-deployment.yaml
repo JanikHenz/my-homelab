@@ -23,7 +23,7 @@ spec:
           image: linuxserver/radarr:latest
           env:
             - name: PUID
-              value: "1000" # Standard User ID (meistens sicherer als Root)
+              value: "1000"
             - name: PGID
               value: "1000"
             - name: TZ

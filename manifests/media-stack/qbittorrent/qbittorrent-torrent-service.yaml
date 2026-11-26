@@ -4,9 +4,6 @@ metadata:
   name: qbittorrent-torrent-service
   namespace: media
 spec:
-  # NodePort is required here: torrent protocol (TCP/UDP raw traffic) cannot
-  # be routed through Traefik's HTTP layer. This NodePort exposes the torrent
-  # listening port directly on the node so peers can connect.
   type: NodePort
   selector:
     app: qbittorrent

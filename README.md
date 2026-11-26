@@ -160,7 +160,8 @@ Lokale KI ohne Cloud: **LibreChat** ist die Chat-Oberfläche für **Ollama**. De
 
 ### Monitoring
 
-Prometheus sammelt Cluster-, Host- und GPU-Metriken (Aufbewahrung 30 Tage), Grafana stellt sie dar.
+Prometheus sammelt Cluster-, Host-, Container- und GPU-Metriken (Aufbewahrung 30 Tage), Grafana stellt sie dar.
+Alle Metriken tragen das Label `cluster="homelab"` (wird von den Kubernetes-Dashboards benötigt).
 
 | Komponente | Zweck | Image | Port | URL |
 | --- | --- | --- | --- | --- |
@@ -168,6 +169,21 @@ Prometheus sammelt Cluster-, Host- und GPU-Metriken (Aufbewahrung 30 Tage), Graf
 | Grafana | Dashboards | `grafana/grafana:latest` | 3000 | `grafana.janikhenz.ch` |
 | node-exporter | Host-Metriken (DaemonSet, beide Nodes) | `prom/node-exporter:latest` | 9100 | intern |
 | dcgm-exporter | GPU-Metriken (DaemonSet, Homeserver) | `nvcr.io/nvidia/k8s/dcgm-exporter:3.3.7-3.5.0-ubuntu22.04` | 9400 | intern |
+| kube-state-metrics | Zustand der Kubernetes-Objekte (Pods, Neustarts, Replicas) | `registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.18.0` | 8080 | intern |
+| cAdvisor (im kubelet) | CPU/RAM pro Container | – | – | intern |
+
+**Dashboards** (Ordner *Homelab*, als ConfigMaps `manifests/monitoring/grafana-dashboard-*.yaml` im Repo):
+
+| Dashboard | Quelle | Zeigt |
+| --- | --- | --- |
+| Node Exporter Full | [grafana.com 1860](https://grafana.com/grafana/dashboards/1860) | CPU, RAM, Disks, Netzwerk, Temperaturen pro Node |
+| NVIDIA DCGM Exporter | [grafana.com 12239](https://grafana.com/grafana/dashboards/12239) | GPU-Auslastung, VRAM, Temperatur, Strom |
+| Kubernetes / Views / Global | [grafana.com 15757](https://grafana.com/grafana/dashboards/15757) | Cluster-Überblick: Ressourcen, Pods, Namespaces |
+| Kubernetes / Views / Namespaces | [grafana.com 15758](https://grafana.com/grafana/dashboards/15758) | CPU/RAM/Netzwerk pro Namespace |
+| Kubernetes / Views / Nodes | [grafana.com 15759](https://grafana.com/grafana/dashboards/15759) | Pods und Auslastung pro Node |
+| Kubernetes / Views / Pods | [grafana.com 15760](https://grafana.com/grafana/dashboards/15760) | Status, Neustarts, Ressourcen pro Pod |
+
+> kube-state-metrics hat bewusst **keinen Zugriff auf Secrets**. Die Kachel „Secrets“ im Global-Dashboard bleibt deshalb leer.
 
 ### Weitere Apps
 
@@ -372,6 +388,8 @@ brauchen – der Grund steht jeweils als Kommentar im Service.
 | ArgoCD aktualisieren | `targetRevision` in `apps/argocd.yaml` erhöhen → Push → Diff prüfen → von Hand syncen. Kein `helm upgrade` mehr. |
 | eine Application löschen | Bei `infrastructure` und `argocd` **immer „Non-cascading“** wählen. Bei App-Applications löscht ArgoCD nur die Kachel, nicht die Workloads. |
 | ein neues Secret | Mit `kubectl create secret` anlegen, siehe [Secrets](#secrets). |
+| die Prometheus-Konfiguration ändern | `prometheus-config.yaml` ändern **und** `checksum/config` in `prometheus-deployment.yaml` anpassen (`sha256sum` der neuen `prometheus.yml`, erste 12 Zeichen) – sonst lädt Prometheus die Änderung nicht. |
+| ein Grafana-Dashboard hinzufügen | JSON von grafana.com als ConfigMap `grafana-dashboard-<name>.yaml` anlegen (`__inputs` entfernen, Datasource → `Prometheus`) und im `projected`-Volume in `grafana-deployment.yaml` eintragen. |
 
 ---
 

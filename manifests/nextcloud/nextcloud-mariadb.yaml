@@ -1,4 +1,3 @@
-# MariaDB Database for Nextcloud
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,15 +54,11 @@ spec:
               mountPath: /var/lib/mysql
           livenessProbe:
             exec:
-              # ping exits 0 whenever the server answers (even "access denied"),
-              # so no password is needed here and none leaks into the process list.
               command: ["mysqladmin", "ping", "-h", "localhost"]
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             exec:
-              # ping exits 0 whenever the server answers (even "access denied"),
-              # so no password is needed here and none leaks into the process list.
               command: ["mysqladmin", "ping", "-h", "localhost"]
             initialDelaySeconds: 5
             periodSeconds: 5

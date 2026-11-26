@@ -4,7 +4,6 @@ metadata:
   name: qbittorrent-service
   namespace: media
 spec:
-  # WebUI only - torrent ports (6881) are in qbittorrent-torrent-service.yaml
   selector:
     app: qbittorrent
   ports:

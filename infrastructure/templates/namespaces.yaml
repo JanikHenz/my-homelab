@@ -5,6 +5,5 @@ kind: Namespace
 metadata:
   name: {{ . }}
   annotations:
-    # never delete/prune a namespace via ArgoCD (would wipe all secrets in it)
     argocd.argoproj.io/sync-options: Delete=false,Prune=false
 {{- end }}

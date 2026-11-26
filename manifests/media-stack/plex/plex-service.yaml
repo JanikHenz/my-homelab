@@ -4,7 +4,6 @@ metadata:
   name: plex-service
   namespace: media
 spec:
-  # NodePort: LAN clients (TV apps) use 192.168.1.9:30002
   type: NodePort
   selector:
     app: plex

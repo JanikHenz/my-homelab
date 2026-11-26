@@ -9,13 +9,16 @@ data:
       scrape_interval: 30s
       evaluation_interval: 30s
 
+    # Every job adds cluster="homelab": the "Kubernetes / Views" dashboards
+    # filter all queries by a cluster label.
     scrape_configs:
-      # Prometheus selbst
       - job_name: prometheus
         static_configs:
           - targets: ['localhost:9090']
+        relabel_configs:
+          - target_label: cluster
+            replacement: homelab
 
-      # Kubernetes API-Server
       - job_name: kubernetes-apiservers
         kubernetes_sd_configs:
           - role: endpoints
@@ -28,8 +31,9 @@ data:
           - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
             action: keep
             regex: default;kubernetes;https
+          - target_label: cluster
+            replacement: homelab
 
-      # Kubernetes Nodes (kubelet)
       - job_name: kubernetes-nodes
         scheme: https
         tls_config:
@@ -41,8 +45,12 @@ data:
         relabel_configs:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
+          - source_labels: [__meta_kubernetes_node_name]
+            target_label: node
+          - target_label: cluster
+            replacement: homelab
 
-      # cAdvisor (Container-Metriken via kubelet)
+      # container_* metrics (CPU/RAM per pod). "node" is used by the Nodes dashboard.
       - job_name: kubernetes-cadvisor
         scheme: https
         tls_config:
@@ -55,8 +63,11 @@ data:
         relabel_configs:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
+          - source_labels: [__meta_kubernetes_node_name]
+            target_label: node
+          - target_label: cluster
+            replacement: homelab
 
-      # Node Exporter (Host-Metriken: CPU, RAM, Disk, Network)
       - job_name: node-exporter
         kubernetes_sd_configs:
           - role: pod
@@ -82,8 +93,19 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
+          - target_label: cluster
+            replacement: homelab
 
-      # Alle Pods mit der Annotation prometheus.io/scrape: "true"
+      # kube_* metrics (pod status, restarts, replicas). honor_labels keeps the
+      # namespace/pod labels of the objects instead of the exporter's own.
+      - job_name: kube-state-metrics
+        honor_labels: true
+        static_configs:
+          - targets: ['kube-state-metrics:8080']
+        relabel_configs:
+          - target_label: cluster
+            replacement: homelab
+
       - job_name: kubernetes-pods
         kubernetes_sd_configs:
           - role: pod
@@ -108,3 +130,5 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             action: replace
             target_label: kubernetes_pod_name
+          - target_label: cluster
+            replacement: homelab

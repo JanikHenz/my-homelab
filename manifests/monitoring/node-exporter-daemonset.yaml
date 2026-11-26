@@ -13,8 +13,6 @@ spec:
     metadata:
       labels:
         app: node-exporter
-      # No prometheus.io annotations: scraped by the dedicated "node-exporter" job
-      # in prometheus-config.yaml (otherwise every metric would exist twice).
     spec:
       hostPID: true
       hostNetwork: true

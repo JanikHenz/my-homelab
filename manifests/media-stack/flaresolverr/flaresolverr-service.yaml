@@ -4,7 +4,6 @@ metadata:
   name: flaresolverr-service
   namespace: media
 spec:
-  # ClusterIP only - internal service used by Prowlarr, no public access needed
   type: ClusterIP
   selector:
     app: flaresolverr

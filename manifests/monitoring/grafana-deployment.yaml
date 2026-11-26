@@ -86,6 +86,13 @@ spec:
         - name: provisioning
           configMap:
             name: grafana-provisioning
+        # all dashboard ConfigMaps (grafana-dashboard-*.yaml) in one folder
         - name: dashboards
-          configMap:
-            name: grafana-dashboard-nodes
+          projected:
+            sources:
+              - configMap: { name: grafana-dashboard-node-exporter-full }
+              - configMap: { name: grafana-dashboard-nvidia-dcgm }
+              - configMap: { name: grafana-dashboard-k8s-global }
+              - configMap: { name: grafana-dashboard-k8s-namespaces }
+              - configMap: { name: grafana-dashboard-k8s-nodes }
+              - configMap: { name: grafana-dashboard-k8s-pods }

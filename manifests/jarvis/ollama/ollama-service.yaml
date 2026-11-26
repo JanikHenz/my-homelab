@@ -4,7 +4,6 @@ metadata:
   name: ollama-service
   namespace: jarvis
 spec:
-  # NodePort: Home Assistant uses http://192.168.1.9:30013
   type: NodePort
   selector:
     app: ollama

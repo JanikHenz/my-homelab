@@ -15,6 +15,11 @@ spec:
     metadata:
       labels:
         app: prometheus
+      annotations:
+        # sha256 (first 12 chars) of prometheus.yml in prometheus-config.yaml.
+        # Prometheus does not reload its config by itself – update this value
+        # whenever the config changes, so ArgoCD restarts the pod.
+        checksum/config: "ddc1a72a797e"
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
