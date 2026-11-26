@@ -9,7 +9,7 @@ metadata:
   name: infrastructure
   namespace: argocd
 spec:
-  project: default
+  project: infrastructure
   source:
     repoURL: "https://github.com/JanikHenz/my-homelab.git"
     targetRevision: HEAD

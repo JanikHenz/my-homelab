@@ -4,9 +4,7 @@ metadata:
   name: radarr-service
   namespace: media
 spec:
-  type: NodePort
   selector:
     app: radarr
   ports:
     - port: 7878
-      nodePort: 30004

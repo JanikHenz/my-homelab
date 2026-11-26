@@ -5,6 +5,9 @@ metadata:
   namespace: media
 spec:
   # WebUI only - torrent ports (6881) are in qbittorrent-torrent-service.yaml
+  # NodePort only because Radarr still uses 192.168.1.9:30007 as download client.
+  # TODO: switch Radarr to host "qbittorrent-service", port 8080 (like Sonarr),
+  # then remove "type" and "nodePort" here.
   type: NodePort
   selector:
     app: qbittorrent

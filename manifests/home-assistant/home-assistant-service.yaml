@@ -4,6 +4,7 @@ metadata:
   name: home-assistant-service
   namespace: home-assistant
 spec:
+  # NodePort: LAN clients (companion app) use 192.168.1.9:30009
   type: NodePort
   selector:
     app: home-assistant

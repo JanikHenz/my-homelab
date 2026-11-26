@@ -4,10 +4,8 @@ metadata:
   name: librechat-service
   namespace: jarvis
 spec:
-  type: NodePort
   selector:
     app: librechat
   ports:
     - name: http
       port: 3080
-      nodePort: 30016

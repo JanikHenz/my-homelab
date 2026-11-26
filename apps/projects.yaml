@@ -1,0 +1,68 @@
+# ArgoCD projects: limit what each group of Applications may create.
+# A manifest outside these rules is rejected by ArgoCD with "not permitted in
+# project" – nothing is deleted, the sync simply fails.
+# sync-wave -1: created before the Applications that reference them.
+
+# infrastructure: the only project allowed to create Namespaces and PersistentVolumes.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: infrastructure
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Cluster-wide resources (namespaces, storage, NVIDIA device plugin)
+  sourceRepos:
+    - "https://github.com/JanikHenz/my-homelab.git"
+  destinations:
+    - name: homelab
+      namespace: "*"
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+    - { group: "", kind: PersistentVolume }
+    - { group: node.k8s.io, kind: RuntimeClass }
+---
+# platform: components that need cluster-wide rights (RBAC, CRDs).
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: ArgoCD itself, monitoring and the dashboard
+  sourceRepos:
+    - "https://github.com/JanikHenz/my-homelab.git"
+    - "https://argoproj.github.io/argo-helm"
+  destinations:
+    - { name: homelab, namespace: argocd }
+    - { name: homelab, namespace: monitoring }
+    - { name: homelab, namespace: default }
+  clusterResourceWhitelist:
+    - { group: rbac.authorization.k8s.io, kind: ClusterRole }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRoleBinding }
+    - { group: apiextensions.k8s.io, kind: CustomResourceDefinition }
+---
+# apps: regular workloads – only namespaced resources in their own namespaces.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Homelab applications
+  sourceRepos:
+    - "https://github.com/JanikHenz/my-homelab.git"
+  destinations:
+    - { name: homelab, namespace: media }
+    - { name: homelab, namespace: jarvis }
+    - { name: homelab, namespace: home-assistant }
+    - { name: homelab, namespace: nextcloud }
+    - { name: homelab, namespace: vaultwarden }
+    - { name: homelab, namespace: gaming }
+    - { name: homelab, namespace: syncthing }
+  # no clusterResourceWhitelist: cluster-scoped resources are forbidden

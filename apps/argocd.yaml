@@ -1,0 +1,43 @@
+# ArgoCD manages itself (Helm chart argo-cd).
+# Upgrades: raise targetRevision, review the diff in ArgoCD, sync by hand.
+# Do NOT use "helm upgrade" anymore.
+#
+# Intentionally WITHOUT automated sync: a broken change could lock you out.
+# DANGER: Never delete this Application with "Foreground"/"Background" cascade –
+# that would uninstall ArgoCD. Only "Non-cascading".
+#
+# Values = the former Helm values + the settings that were patched by hand
+# (url, server.insecure). Only intended change: argocd-server becomes ClusterIP
+# (was NodePort 30800/30443) – access via https://argocd.janikhenz.ch (Traefik).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd
+  namespace: argocd
+spec:
+  project: platform
+  source:
+    repoURL: "https://argoproj.github.io/argo-helm"
+    chart: argo-cd
+    targetRevision: 9.4.7
+    helm:
+      releaseName: argocd
+      valuesObject:
+        global:
+          domain: argocd.janikhenz.ch
+          nodeSelector:
+            kubernetes.io/hostname: raspberrypi
+        configs:
+          params:
+            # TLS is terminated by Cloudflare; Traefik talks plain HTTP to the server
+            server.insecure: true
+        server:
+          service:
+            type: ClusterIP
+  destination:
+    name: homelab
+    namespace: argocd
+  syncPolicy:
+    syncOptions:
+      # CRDs of ArgoCD are too large for client-side apply
+      - ServerSideApply=true

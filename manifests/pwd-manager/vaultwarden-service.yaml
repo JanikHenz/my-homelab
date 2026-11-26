@@ -4,9 +4,7 @@ metadata:
   name: vaultwarden-service
   namespace: vaultwarden
 spec:
-  type: NodePort
   selector:
     app: vaultwarden
   ports:
     - port: 80
-      nodePort: 30011

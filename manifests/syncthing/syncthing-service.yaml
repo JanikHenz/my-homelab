@@ -4,13 +4,11 @@ metadata:
   name: syncthing-service
   namespace: syncthing
 spec:
-  type: NodePort
   selector:
     app: syncthing
   ports:
     - name: web-gui
       port: 8384
-      nodePort: 30021
 ---
 # Sync/Discovery für Geräte im LAN (nicht über Traefik/HTTP)
 apiVersion: v1

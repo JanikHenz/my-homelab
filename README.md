@@ -316,8 +316,17 @@ flowchart LR
 ### Sync-Policy
 
 - **root-app** (`bootstrap/root-app.yaml`): `automated.prune` + `automated.selfHeal` – hält `apps/` (ApplicationSet + infrastructure) automatisch aktuell.
-- **App-Applications** (aus `apps/applicationset.yaml` generiert): **manueller Sync**. `spec.replicas` wird von ArgoCD ignoriert (`ignoreDifferences` + `RespectIgnoreDifferences`), damit Skalieren über das Dashboard kein OutOfSync erzeugt und ein Sync gestoppte Apps nicht wieder startet.
+- **App-Applications** (aus `apps/applicationset.yaml` generiert): **automated mit `prune` + `selfHeal`** – Git ist die Wahrheit. `spec.replicas` wird von ArgoCD ignoriert (`ignoreDifferences` + `RespectIgnoreDifferences`), damit Skalieren über das Dashboard kein OutOfSync erzeugt und ein Sync gestoppte Apps nicht wieder startet.
+- **argocd** (`apps/argocd.yaml`): ArgoCD verwaltet sich selbst (Helm-Chart `argo-cd`). **Manueller Sync**, Upgrades über `targetRevision`. Niemals mit Kaskade löschen.
 - **infrastructure** (`apps/infrastructure.yaml`, Helm-Chart): **manueller Sync, immer ohne Prune**. Namespaces sind per `Delete=false,Prune=false` vor dem Löschen geschützt.
+
+### AppProjects (`apps/projects.yaml`)
+
+| Projekt | Apps | Darf clusterweit anlegen |
+| --- | --- | --- |
+| `infrastructure` | infrastructure | Namespace, PersistentVolume, RuntimeClass |
+| `platform` | argocd, argocd-ingress, dashboard, monitoring | ClusterRole, ClusterRoleBinding, CRDs |
+| `apps` | alle übrigen Apps | nichts – nur Ressourcen in den eigenen Namespaces |
 
 ---
 
@@ -403,10 +412,10 @@ flowchart TD
 | ------------ | ------------------------------------------ | ----- | -------- | ------------------------- | --- |
 | Jellyfin     | `jellyfin/jellyfin:latest`                 | 8096  | 30001    | `jellyfin.janikhenz.ch`   | ja  |
 | Plex         | `plexinc/pms-docker:latest`                | 32400 | 30002    | `plex.janikhenz.ch`       |     |
-| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | 30003    | `jellyseerr.janikhenz.ch` |     |
-| Radarr       | `linuxserver/radarr:latest`                | 7878  | 30004    | `radarr.janikhenz.ch`     |     |
-| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | 30005    | `sonarr.janikhenz.ch`     |     |
-| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | 30006    | `prowlarr.janikhenz.ch`   |     |
+| Jellyseerr   | `ghcr.io/seerr-team/seerr:latest`          | 5055  | —        | `jellyseerr.janikhenz.ch` |     |
+| Radarr       | `linuxserver/radarr:latest`                | 7878  | —        | `radarr.janikhenz.ch`     |     |
+| Sonarr       | `linuxserver/sonarr:latest`                | 8989  | —        | `sonarr.janikhenz.ch`     |     |
+| Prowlarr     | `linuxserver/prowlarr:latest`              | 9696  | —        | `prowlarr.janikhenz.ch`   |     |
 | qBittorrent  | `linuxserver/qbittorrent:latest`           | 8080  | 30007    | `qbt.janikhenz.ch`        |     |
 | FlareSolverr | `ghcr.io/flaresolverr/flaresolverr:latest` | 8191  | —        | intern                    |     |
 
@@ -461,8 +470,8 @@ Prometheus sammelt Metriken vom Cluster, node-exporter liefert Host-Metriken und
 
 | Komponente    | Image / Typ                                    | Port | NodePort | Subdomain (Traefik)       |
 | ------------- | ---------------------------------------------- | ---- | -------- | ------------------------- |
-| Prometheus    | `prom/prometheus:latest`                       | 9090 | 30090    | `prometheus.janikhenz.ch` |
-| Grafana       | `grafana/grafana:latest`                       | 3000 | 30091    | `grafana.janikhenz.ch`    |
+| Prometheus    | `prom/prometheus:latest`                       | 9090 | —        | `prometheus.janikhenz.ch` |
+| Grafana       | `grafana/grafana:latest`                       | 3000 | —        | `grafana.janikhenz.ch`    |
 | node-exporter | `prom/node-exporter` (DaemonSet)               | 9100 | —        | intern                    |
 | dcgm-exporter | `nvcr.io/nvidia/k8s/dcgm-exporter` (DaemonSet) | 9400 | —        | intern (GPU-Metriken)     |
 
@@ -493,7 +502,7 @@ Prometheus sammelt Metriken vom Cluster, node-exporter liefert Host-Metriken und
 | Datenbank   | `mariadb:10.11`                  |
 | Node        | `homeserver`                     |
 | Port        | 80                               |
-| NodePort    | 30012                            |
+| NodePort    | —                                |
 | URL         | `https://nextcloud.janikhenz.ch` |
 | Data-PVC    | `nextcloud-data-pvc` (100 Gi)    |
 | DB-PVC      | `nextcloud-mariadb-pvc` (10 Gi)  |
@@ -511,7 +520,7 @@ Bitwarden-kompatibler Passwort-Manager auf dem Raspberry Pi.
 | Image       | `vaultwarden/server:latest`   |
 | Node        | `raspberrypi`                 |
 | Port        | 80                            |
-| NodePort    | 30011                         |
+| NodePort    | —                             |
 | URL         | `https://vault.janikhenz.ch`  |
 | Data-PVC    | `vaultwarden-data-pvc` (1 Gi) |
 
@@ -650,7 +659,7 @@ flowchart LR
 | ----------- | ------------------------------------------------------------- |
 | Image       | `ghcr.io/janikhenz/dashboard:latest`                          |
 | Node        | `raspberrypi`                                                 |
-| NodePort    | 30080                                                         |
+| NodePort    | —                                                             |
 | URL         | `https://janikhenz.ch`                                        |
 | Source Repo | [JanikHenz/dashboard](https://github.com/JanikHenz/dashboard) |
 
@@ -738,30 +747,30 @@ Die technische Zielarchitektur für den Jarvis-Stack, Betriebsregeln, Recovery-R
 
 ## Port-Übersicht
 
-Öffentliche HTTP-Services sind per **NodePort** lokal im Heimnetz erreichbar und extern über Traefik + Cloudflare Tunnel (Subdomain).
+Alle HTTP-Services sind über Traefik + Cloudflare Tunnel (Subdomain) erreichbar. Einen **NodePort** haben nur noch Dienste, die im LAN direkt per IP gebraucht werden (TV-Apps, Home-Assistant-App, Home Assistant → Ollama/Whisper/Piper, Wings → Panel, Radarr → qBittorrent) sowie Torrent und Syncthing. Der Grund steht jeweils als Kommentar im Service.
 
 ### Öffentlicher Zugang (NodePort + Traefik IngressRoute)
 
 
 | Service           | Namespace      | Container-Port | NodePort  | Lokale URL                    | Externe URL (Traefik)                |
 | ----------------- | -------------- | -------------- | --------- | ----------------------------- | ------------------------------------ |
-| Dashboard (nginx) | default        | 80             | **30080** | `http://raspberrypi:30080`    | `https://janikhenz.ch`               |
+| Dashboard (nginx) | default        | 80             | —         | —                             | `https://janikhenz.ch`               |
 | Jellyfin          | media          | 8096           | **30001** | `http://homeserver:30001`     | `https://jellyfin.janikhenz.ch`      |
 | Plex              | media          | 32400          | **30002** | `http://homeserver:30002/web` | `https://plex.janikhenz.ch`          |
-| Jellyseerr        | media          | 5055           | **30003** | `http://homeserver:30003`     | `https://jellyseerr.janikhenz.ch`    |
-| Radarr            | media          | 7878           | **30004** | `http://homeserver:30004`     | `https://radarr.janikhenz.ch`        |
-| Sonarr            | media          | 8989           | **30005** | `http://homeserver:30005`     | `https://sonarr.janikhenz.ch`        |
-| Prowlarr          | media          | 9696           | **30006** | `http://homeserver:30006`     | `https://prowlarr.janikhenz.ch`      |
+| Jellyseerr        | media          | 5055           | —         | —                             | `https://jellyseerr.janikhenz.ch`    |
+| Radarr            | media          | 7878           | —         | —                             | `https://radarr.janikhenz.ch`        |
+| Sonarr            | media          | 8989           | —         | —                             | `https://sonarr.janikhenz.ch`        |
+| Prowlarr          | media          | 9696           | —         | —                             | `https://prowlarr.janikhenz.ch`      |
 | qBittorrent WebUI | media          | 8080           | **30007** | `http://homeserver:30007`     | `https://qbt.janikhenz.ch`           |
 | Home Assistant    | home-assistant | 8123           | **30009** | `http://homeserver:30009`     | `https://homeassistant.janikhenz.ch` |
-| Vaultwarden       | vaultwarden    | 80             | **30011** | `http://raspberrypi:30011`    | `https://vault.janikhenz.ch`         |
-| Nextcloud         | nextcloud      | 80             | **30012** | `http://homeserver:30012`     | `https://nextcloud.janikhenz.ch`     |
+| Vaultwarden       | vaultwarden    | 80             | —         | —                             | `https://vault.janikhenz.ch`         |
+| Nextcloud         | nextcloud      | 80             | —         | —                             | `https://nextcloud.janikhenz.ch`     |
 | Ollama            | jarvis         | 11434          | **30013** | `http://homeserver:30013`     | `https://ollama.janikhenz.ch`        |
-| LibreChat         | jarvis         | 3080           | **30016** | `http://homeserver:30016`     | `https://chat.janikhenz.ch`          |
+| LibreChat         | jarvis         | 3080           | —         | —                             | `https://chat.janikhenz.ch`          |
 | Whisper           | jarvis         | 10300          | **30014** | `http://homeserver:30014`     | —                                    |
 | Piper             | jarvis         | 10200          | **30015** | `http://homeserver:30015`     | —                                    |
-| Prometheus        | monitoring     | 9090           | **30090** | `http://homeserver:30090`     | `https://prometheus.janikhenz.ch`    |
-| Grafana           | monitoring     | 3000           | **30091** | `http://homeserver:30091`     | `https://grafana.janikhenz.ch`       |
+| Prometheus        | monitoring     | 9090           | —         | —                             | `https://prometheus.janikhenz.ch`    |
+| Grafana           | monitoring     | 3000           | —         | —                             | `https://grafana.janikhenz.ch`       |
 | Pterodactyl Panel | gaming         | 80             | **30020** | `http://homeserver:30020`     | `https://pterodactyl.janikhenz.ch`   |
 
 
@@ -796,8 +805,10 @@ my-homelab/
 │   └── root-app.yaml              # ArgoCD App of Apps
 │
 ├── apps/                          # wird von der root-app gesynct
-│   ├── applicationset.yaml        # erzeugt eine Application pro App (Liste)
-│   └── infrastructure.yaml        # Application für infrastructure/ (manueller Sync)
+│   ├── projects.yaml              # AppProjects: infrastructure, platform, apps
+│   ├── applicationset.yaml        # erzeugt eine Application pro App (Liste, Auto-Sync)
+│   ├── infrastructure.yaml        # Application für infrastructure/ (manueller Sync)
+│   └── argocd.yaml                # ArgoCD verwaltet sich selbst (manueller Sync)
 │
 ├── infrastructure/                # Helm-Chart: cluster-weite Ressourcen
 │   ├── Chart.yaml

@@ -4,10 +4,8 @@ metadata:
   name: prowlarr-service
   namespace: media
 spec:
-  type: NodePort
   selector:
     app: prowlarr
   ports:
     - name: http
       port: 9696
-      nodePort: 30006
