@@ -20,6 +20,3 @@ spec:
       name: librechat-secrets
       jsonPointers:
         - /data
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true

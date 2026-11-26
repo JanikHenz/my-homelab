@@ -56,18 +56,16 @@ spec:
               mountPath: /var/lib/mysql
           livenessProbe:
             exec:
-              command:
-                - sh
-                - -c
-                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+              # ping exits 0 whenever the server answers (even "access denied"),
+              # so no password is needed here and none leaks into the process list.
+              command: ["mysqladmin", "ping", "-h", "localhost"]
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             exec:
-              command:
-                - sh
-                - -c
-                - mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD
+              # ping exits 0 whenever the server answers (even "access denied"),
+              # so no password is needed here and none leaks into the process list.
+              command: ["mysqladmin", "ping", "-h", "localhost"]
             initialDelaySeconds: 5
             periodSeconds: 5
       volumes:

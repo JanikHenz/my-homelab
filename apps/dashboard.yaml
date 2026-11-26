@@ -14,6 +14,3 @@ spec:
   destination:
     name: homelab
     namespace: default
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true

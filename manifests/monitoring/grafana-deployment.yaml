@@ -23,7 +23,7 @@ spec:
         fsGroup: 472
       initContainers:
         - name: fix-permissions
-          image: busybox:latest
+          image: busybox:1.37.0
           command: ["sh", "-c", "chown -R 472:472 /var/lib/grafana"]
           securityContext:
             runAsUser: 0
@@ -40,7 +40,10 @@ spec:
             - name: GF_SERVER_ROOT_URL
               value: "https://grafana.janikhenz.ch"
             - name: GF_SECURITY_ADMIN_PASSWORD
-              value: "changeme"
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-secrets
+                  key: admin-password
             - name: GF_USERS_ALLOW_SIGN_UP
               value: "false"
           securityContext:

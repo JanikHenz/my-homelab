@@ -1,0 +1,20 @@
+# Cluster-wide resources: namespaces, PersistentVolumes/Claims, NVIDIA device plugin.
+# Intentionally WITHOUT automated sync: changes to storage should always be
+# reviewed in the ArgoCD diff and synced by hand.
+# When deleting this Application, ALWAYS choose "Non-cascading" – otherwise
+# ArgoCD deletes all PVCs/PVs and namespaces of the cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infrastructure
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/JanikHenz/my-homelab.git"
+    targetRevision: HEAD
+    path: infrastructure
+  destination:
+    name: homelab

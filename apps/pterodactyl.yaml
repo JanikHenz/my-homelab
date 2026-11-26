@@ -20,6 +20,3 @@ spec:
       name: pterodactyl-secrets
       jsonPointers:
         - /data
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true

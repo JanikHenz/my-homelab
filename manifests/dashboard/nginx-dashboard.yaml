@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx-dashboard
+  namespace: default
   labels:
     app: nginx-dashboard
 spec:
@@ -35,4 +36,3 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-      volumes: []

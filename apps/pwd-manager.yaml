@@ -14,6 +14,3 @@ spec:
   destination:
     name: homelab
     namespace: vaultwarden
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true

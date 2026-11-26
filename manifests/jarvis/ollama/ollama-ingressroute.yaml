@@ -5,7 +5,7 @@ metadata:
   namespace: jarvis
 spec:
   entryPoints:
-    - websecure
+    - web
   routes:
     - match: Host(`ollama.janikhenz.ch`)
       kind: Rule

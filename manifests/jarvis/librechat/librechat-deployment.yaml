@@ -23,7 +23,7 @@ spec:
         fsGroup: 1000
       initContainers:
         - name: fix-permissions
-          image: busybox:latest
+          image: busybox:1.37.0
           command:
             - sh
             - -c
@@ -37,12 +37,12 @@ spec:
             - name: data
               mountPath: /data
         - name: wait-for-mongodb
-          image: mongo:8.0.20
+          image: busybox:1.37.0
           command:
             - sh
             - -c
             - |
-              until mongosh --host librechat-mongodb --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+              until nc -z librechat-mongodb 27017; do
                 echo "waiting for mongodb..."
                 sleep 2
               done

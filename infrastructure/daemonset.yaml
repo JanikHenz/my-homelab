@@ -7,8 +7,6 @@ spec:
   selector:
     matchLabels:
       name: nvidia-device-plugin-ds
-  updateStrategy:
-    type: RollingUpdate
   template:
     metadata:
       labels:

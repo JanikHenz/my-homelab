@@ -817,7 +817,7 @@ my-homelab/
 │   └── flaresolverr.yaml
 │   └── pterodactyl.yaml
 │
-├── infrastrucure/                 # Cluster-weite Ressourcen
+├── infrastructure/                # Cluster-weite Ressourcen (ArgoCD-App "infrastructure", manueller Sync)
 │   ├── namespaces.yaml
 │   ├── media-storage.yaml
 │   ├── jarvis-storage.yaml

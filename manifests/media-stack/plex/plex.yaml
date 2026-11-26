@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: plex
+  namespace: media
   labels:
     app: plex
 spec:
@@ -37,7 +38,7 @@ spec:
                   name: plex-claim
                   key: token
             - name: TZ
-              value: "Europe/Berlin"
+              value: "Europe/Zurich"
           volumeMounts:
             - name: plex-config
               mountPath: /config

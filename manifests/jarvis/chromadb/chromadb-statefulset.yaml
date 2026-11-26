@@ -8,8 +8,6 @@ metadata:
 spec:
   serviceName: chromadb-service
   replicas: 1
-  updateStrategy:
-    type: RollingUpdate
   selector:
     matchLabels:
       app: chromadb

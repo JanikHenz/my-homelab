@@ -23,7 +23,7 @@ spec:
       initContainers:
         # Wait for database to be ready
         - name: wait-for-db
-          image: busybox:latest
+          image: busybox:1.37.0
           command:
             - sh
             - -c
@@ -34,7 +34,7 @@ spec:
               done
         # Setup required directories for Pterodactyl Panel
         - name: setup-directories
-          image: busybox:latest
+          image: busybox:1.37.0
           command:
             - sh
             - -c
@@ -44,16 +44,11 @@ spec:
               mkdir -p /app/storage/framework/sessions
               mkdir -p /app/storage/framework/views
               mkdir -p /app/storage/logs
-              mkdir -p /app/bootstrap/cache
-              mkdir -p /app/var
-              mkdir -p /var/log/panel/logs
               # Entrypoint may create root-owned cache dirs; keep storage world-writable
               # so php-fpm (www-data) can write after migrate/seed runs as root.
               rm -rf /app/storage/framework/cache/data/*
               chown -R 82:82 /app/storage || true
               chmod -R 777 /app/storage
-              chmod -R 777 /app/bootstrap/cache
-              chmod -R 777 /app/var
               echo "Directories created"
           volumeMounts:
             - name: config

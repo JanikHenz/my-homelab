@@ -14,6 +14,3 @@ spec:
   destination:
     name: homelab
     namespace: home-assistant
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true

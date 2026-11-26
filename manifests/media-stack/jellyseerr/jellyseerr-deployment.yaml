@@ -30,8 +30,6 @@ spec:
           env:
             - name: TZ
               value: "Europe/Zurich"
-            - name: JELLYFIN_SERVER
-              value: "http://jellyfin-service:8096" # Hier ist dein Wissen von eben!
           volumeMounts:
             - name: config-storage
               mountPath: /app/config

@@ -23,7 +23,7 @@ spec:
         # Stale lock files on the PVC survive pod restarts and make qBittorrent
         # exit immediately ("another instance is running").
         - name: clear-stale-locks
-          image: busybox:latest
+          image: busybox:1.37.0
           command:
             - sh
             - -c

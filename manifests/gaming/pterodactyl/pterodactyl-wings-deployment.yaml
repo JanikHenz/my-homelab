@@ -38,14 +38,8 @@ spec:
             - containerPort: 8080
               name: wings-api
               protocol: TCP
-            # Game server ports - these are managed dynamically by Wings
-            # Standard allocation range: 20000-30000
           securityContext:
-            privileged: true  # Required for Docker-in-Docker
-            capabilities:
-              add:
-                - SYS_ADMIN
-                - NET_ADMIN
+            privileged: true  # Required for Docker-in-Docker (includes all capabilities)
           resources:
             requests:
               cpu: 200m
