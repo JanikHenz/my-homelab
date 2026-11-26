@@ -27,6 +27,24 @@ kubectl get pods -A | grep -v Running   # nur noch Completed/nichts?
 
 ---
 
+### 0b. Raspberry Pi bootete unter Last neu (gelöst 26.11.2026, 08:25)
+
+Während der Syncs ist der Pi (Control Plane + ArgoCD) dreimal komplett neu gebootet
+(07:56, 08:06, 08:12). RAM/CPU/Temperatur/SD-Karte waren laut Prometheus unauffällig.
+**Ursache:** Der Pi 4 hing an einem **1-A-Handyladegerät** (benötigt bis 3 A). Bei Lastspitzen
+(ArgoCD-Sync) brach die Spannung ein → Hardware-Reset ohne Log. `vcgencmd get_throttled`
+zeigte danach `0x0`, weil die Flags bei jedem Boot gelöscht werden.
+**Fix:** Netzteil gegen eines mit 3 A getauscht.
+
+Empfehlung zur Absicherung (auf dem Pi):
+
+```bash
+sudo mkdir -p /var/log/journal && sudo systemctl restart systemd-journald   # Logs überleben Reboots
+vcgencmd get_throttled   # ab und zu prüfen, muss 0x0 bleiben
+```
+
+---
+
 ## 1. 🔴 Änderungen prüfen und committen
 
 Der Ordner `infrastrucure/` wurde mit `mv` (nicht `git mv`) umbenannt. Damit Git die
@@ -153,7 +171,7 @@ oder danach wieder über das Dashboard herunterskalieren.
 
 | App | Erwarteter Diff | Hinweis |
 |---|---|---|
-| `infrastructure` | Annotation `Delete=false,Prune=false` an den Namespaces; DaemonSet ohne `updateStrategy` (no-op) | **Zuerst „App Diff“ ansehen.** Sync **ohne** „Prune“. Es dürfen keine PV/PVC-Änderungen auftauchen. |
+| `infrastructure` | Annotation `Delete=false,Prune=false` an den Namespaces; DaemonSet ohne `updateStrategy` (no-op) | **Zuerst „App Diff“ ansehen.** Sync **ohne** „Prune“. Beim ersten Mal stehen **alle ~60 Objekte** auf OutOfSync, weil ArgoCD sie noch nie verwaltet hat (fehlende Tracking-Annotation) – das ist erwartet. Im Diff dürfen bei PVs/PVCs aber **keine `spec`-Änderungen** auftauchen (geprüft per `kubectl diff -R -f infrastructure` am 26.11.: einzige echte Änderung sind die 8 Namespace-Annotationen). |
 | `monitoring` | Grafana-Env (Secret), busybox-Tag, RBAC, dcgm | Schritt 2 muss erledigt sein |
 | `dashboard` | neue ClusterRole/Binding `…-manager`, Namespace | Sync **mit Prune**, damit `dashboard-deployments-reader` gelöscht wird. Danach Scale/Restart im Dashboard testen. |
 | `librechat` | IngressRoute `web`, Init-Container | Schritt 3a erledigt? |
@@ -250,6 +268,10 @@ Nicht ermittelbar, weil auf 0 skaliert: home-assistant, ollama, librechat, piper
 
 Nicht umgesetzt. Bekannte Nutzer von NodePorts:
 - Dashboard: `http://192.168.1.9:30090` (Prometheus) als Fallback.
+- Pterodactyl Wings: spricht das Panel über `http://192.168.1.9:30020` an (Wings-`config.yml`,
+  `remote`). Beim Sync am 26.11. sichtbar: Wings startete vor dem Panel → 2× „connection refused“
+  → Neustart, danach ok. **NodePort 30020 muss bleiben** (oder `remote` in der Wings-Config
+  auf die Panel-Domain umstellen).
 - Torrent (30008) und Syncthing-Sync (30200/30227) **müssen** NodePort bleiben.
 
 Wenn du die cloudflared-Config prüfst (Schritt 4) und alle Hosts auf Traefik zeigen, kannst

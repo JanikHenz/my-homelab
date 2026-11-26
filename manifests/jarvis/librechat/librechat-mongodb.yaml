@@ -6,7 +6,6 @@ metadata:
   labels:
     app: librechat-mongodb
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -70,4 +69,3 @@ spec:
     app: librechat-mongodb
   ports:
     - port: 27017
-      targetPort: 27017

@@ -8,7 +8,5 @@ spec:
   selector:
     app: whisper
   ports:
-    - protocol: TCP
-      port: 10300
-      targetPort: 10300
+    - port: 10300
       nodePort: 30014

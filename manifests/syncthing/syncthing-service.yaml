@@ -9,9 +9,7 @@ spec:
     app: syncthing
   ports:
     - name: web-gui
-      protocol: TCP
       port: 8384
-      targetPort: 8384
       nodePort: 30021
 ---
 # Sync/Discovery für Geräte im LAN (nicht über Traefik/HTTP)

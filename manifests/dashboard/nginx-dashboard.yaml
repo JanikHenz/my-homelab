@@ -6,7 +6,6 @@ metadata:
   labels:
     app: nginx-dashboard
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: nginx-dashboard

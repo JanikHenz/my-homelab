@@ -11,4 +11,3 @@ spec:
   ports:
     - name: http
       port: 8191
-      targetPort: 8191

@@ -1,0 +1,32 @@
+{{- range .Values.volumes }}
+{{- $accessMode := .accessMode | default "ReadWriteOnce" }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}-pv
+spec:
+  storageClassName: ""
+  capacity:
+    storage: {{ .size }}
+  accessModes: [{{ $accessMode }}]
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: {{ .path | quote }}
+    {{- with .hostPathType }}
+    type: {{ . }}
+    {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-pvc
+  namespace: {{ .namespace }}
+spec:
+  storageClassName: ""
+  accessModes: [{{ $accessMode }}]
+  resources:
+    requests:
+      storage: {{ .size }}
+  volumeName: {{ .name }}-pv
+{{- end }}

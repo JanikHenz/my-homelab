@@ -74,4 +74,3 @@ spec:
   ports:
     - name: metrics
       port: 9400
-      targetPort: 9400

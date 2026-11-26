@@ -1,0 +1,69 @@
+# Generates one ArgoCD Application per entry below.
+# The tiles in the ArgoCD UI look exactly like before (one Application each).
+#
+# New app: add one entry (name, path, namespace). If the namespace is new,
+# also add it to infrastructure/values.yaml (namespaces).
+#
+# Apps are synced by hand (no automated sync).
+# spec.replicas is NOT managed by ArgoCD: scaling via the dashboard does not
+# cause OutOfSync and a sync never scales a stopped app back up.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: homelab-apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  syncPolicy:
+    # Applications have no finalizer, so deleting one never deletes workloads.
+    preserveResourcesOnDeletion: true
+  generators:
+    - list:
+        elements:
+          - { name: argocd-ingress, path: manifests/argocd,                   namespace: argocd }
+          - { name: dashboard,      path: manifests/dashboard,                namespace: default }
+          - { name: monitoring,     path: manifests/monitoring,               namespace: monitoring }
+          - { name: home-assistant, path: manifests/home-assistant,           namespace: home-assistant }
+          - { name: nextcloud,      path: manifests/nextcloud,                namespace: nextcloud }
+          - { name: pwd-manager,    path: manifests/pwd-manager,              namespace: vaultwarden }
+          - { name: syncthing,      path: manifests/syncthing,                namespace: syncthing }
+          - { name: pterodactyl,    path: manifests/gaming/pterodactyl,       namespace: gaming }
+          # jarvis
+          - { name: chromadb,       path: manifests/jarvis/chromadb,          namespace: jarvis }
+          - { name: librechat,      path: manifests/jarvis/librechat,         namespace: jarvis }
+          - { name: ollama,         path: manifests/jarvis/ollama,            namespace: jarvis }
+          - { name: piper,          path: manifests/jarvis/piper,             namespace: jarvis }
+          - { name: whisper,        path: manifests/jarvis/whisper,           namespace: jarvis }
+          # media
+          - { name: flaresolverr,   path: manifests/media-stack/flaresolverr, namespace: media }
+          - { name: jellyfin,       path: manifests/media-stack/jellyfin,     namespace: media }
+          - { name: jellyseerr,     path: manifests/media-stack/jellyseerr,   namespace: media }
+          - { name: plex,           path: manifests/media-stack/plex,         namespace: media }
+          - { name: prowlarr,       path: manifests/media-stack/prowlarr,     namespace: media }
+          - { name: qbittorrent,    path: manifests/media-stack/qbittorrent,  namespace: media }
+          - { name: radarr,         path: manifests/media-stack/radarr,       namespace: media }
+          - { name: sonarr,         path: manifests/media-stack/sonarr,       namespace: media }
+  template:
+    metadata:
+      name: "{{ .name }}"
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: "https://github.com/JanikHenz/my-homelab.git"
+        targetRevision: HEAD
+        path: "{{ .path }}"
+      destination:
+        name: homelab
+        namespace: "{{ .namespace }}"
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers: [/spec/replicas]
+        - group: apps
+          kind: StatefulSet
+          jsonPointers: [/spec/replicas]
+      syncPolicy:
+        syncOptions:
+          - RespectIgnoreDifferences=true

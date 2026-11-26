@@ -8,7 +8,5 @@ spec:
   selector:
     app: plex
   ports:
-    - protocol: TCP
-      port: 32400
-      targetPort: 32400
+    - port: 32400
       nodePort: 30002

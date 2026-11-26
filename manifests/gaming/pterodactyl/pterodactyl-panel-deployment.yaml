@@ -7,7 +7,6 @@ metadata:
   labels:
     app: pterodactyl-panel
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:

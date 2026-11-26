@@ -7,7 +7,6 @@ metadata:
   labels:
     app: nextcloud-mariadb
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -84,4 +83,3 @@ spec:
     app: nextcloud-mariadb
   ports:
     - port: 3306
-      targetPort: 3306

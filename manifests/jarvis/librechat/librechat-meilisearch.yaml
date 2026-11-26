@@ -6,7 +6,6 @@ metadata:
   labels:
     app: librechat-meilisearch
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -71,4 +70,3 @@ spec:
     app: librechat-meilisearch
   ports:
     - port: 7700
-      targetPort: 7700

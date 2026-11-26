@@ -4,7 +4,6 @@ metadata:
   name: jellyseerr
   namespace: media
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:

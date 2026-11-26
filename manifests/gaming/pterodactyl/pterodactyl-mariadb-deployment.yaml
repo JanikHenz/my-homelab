@@ -7,7 +7,6 @@ metadata:
   labels:
     app: pterodactyl-mariadb
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -81,4 +80,3 @@ spec:
     app: pterodactyl-mariadb
   ports:
     - port: 3306
-      targetPort: 3306

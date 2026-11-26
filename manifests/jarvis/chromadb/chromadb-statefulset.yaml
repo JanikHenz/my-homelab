@@ -7,7 +7,6 @@ metadata:
     app: chromadb
 spec:
   serviceName: chromadb-service
-  replicas: 1
   selector:
     matchLabels:
       app: chromadb

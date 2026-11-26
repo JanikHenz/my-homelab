@@ -6,7 +6,6 @@ metadata:
   labels:
     app: vaultwarden
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:

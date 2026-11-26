@@ -268,7 +268,7 @@ flowchart LR
     DEV["Developer\nPush to GitHub"]
     GH["GitHub\nJanikHenz/my-homelab"]
     ROOT["root-app\nbootstrap/root-app.yaml"]
-    APPS["apps/\n*.yaml"]
+    APPS["apps/\napplicationset.yaml"]
 
     subgraph MANIFESTS["manifests/"]
         MS["media-stack/"]
@@ -315,10 +315,9 @@ flowchart LR
 
 ### Sync-Policy
 
-Alle ArgoCD Applications haben:
-
-- `**automated.prune: true**` – verwaiste Ressourcen werden gelöscht
-- `**automated.selfHeal: true**` – manuelle Cluster-Änderungen werden revertiert (nur root-app)
+- **root-app** (`bootstrap/root-app.yaml`): `automated.prune` + `automated.selfHeal` – hält `apps/` (ApplicationSet + infrastructure) automatisch aktuell.
+- **App-Applications** (aus `apps/applicationset.yaml` generiert): **manueller Sync**. `spec.replicas` wird von ArgoCD ignoriert (`ignoreDifferences` + `RespectIgnoreDifferences`), damit Skalieren über das Dashboard kein OutOfSync erzeugt und ein Sync gestoppte Apps nicht wieder startet.
+- **infrastructure** (`apps/infrastructure.yaml`, Helm-Chart): **manueller Sync, immer ohne Prune**. Namespaces sind per `Delete=false,Prune=false` vor dem Löschen geschützt.
 
 ---
 
@@ -629,7 +628,7 @@ flowchart LR
     GH_ACT["GitHub Actions"]
     GHCR["ghcr.io/janikhenz/dashboard:latest"]
     GH_HOME["GitHub\nJanikHenz/my-homelab"]
-    ARGO["ArgoCD\napps/dashboard.yaml"]
+    ARGO["ArgoCD\nApplication dashboard"]
     POD["nginx Pod\nRaspberry Pi"]
     TRAEFIK["Traefik\njanikhenz.ch"]
 
@@ -796,39 +795,19 @@ my-homelab/
 ├── bootstrap/
 │   └── root-app.yaml              # ArgoCD App of Apps
 │
-├── apps/                          # ArgoCD Application-Definitionen
-│   ├── dashboard.yaml
-│   ├── monitoring.yaml
-│   ├── home-assistant.yaml
-│   ├── nextcloud.yaml
-│   ├── pwd-manager.yaml
-│   ├── ollama.yaml
-│   ├── librechat.yaml
-│   ├── whisper.yaml
-│   ├── piper.yaml
-│   ├── chromadb.yaml
-│   ├── jellyfin.yaml
-│   ├── plex.yaml
-│   ├── jellyseerr.yaml
-│   ├── radarr.yaml
-│   ├── sonarr.yaml
-│   ├── prowlarr.yaml
-│   ├── qbittorrent.yaml
-│   └── flaresolverr.yaml
-│   └── pterodactyl.yaml
+├── apps/                          # wird von der root-app gesynct
+│   ├── applicationset.yaml        # erzeugt eine Application pro App (Liste)
+│   └── infrastructure.yaml        # Application für infrastructure/ (manueller Sync)
 │
-├── infrastructure/                # Cluster-weite Ressourcen (ArgoCD-App "infrastructure", manueller Sync)
-│   ├── namespaces.yaml
-│   ├── media-storage.yaml
-│   ├── jarvis-storage.yaml
-│   ├── monitoring-storage.yaml
-│   ├── home-assistant-storage.yaml
-│   ├── nextcloud-storage.yaml
-│   ├── pwd-manager-storage.yaml
-│   ├── gaming-storage.yaml
-│   ├── daemonset.yaml             # NVIDIA Device Plugin
-│   ├── nvidia-plugin-config.yaml
-│   └── nvidia-runtimeclass.yaml
+├── infrastructure/                # Helm-Chart: cluster-weite Ressourcen
+│   ├── Chart.yaml
+│   ├── values.yaml                # Namespaces + Volumes (PV/PVC) als Liste
+│   └── templates/
+│       ├── namespaces.yaml
+│       ├── storage.yaml           # PV + PVC pro Eintrag in values.yaml
+│       ├── nvidia-device-plugin.yaml
+│       ├── nvidia-plugin-config.yaml
+│       └── nvidia-runtimeclass.yaml
 │
 ├── manifests/
 │   ├── dashboard/

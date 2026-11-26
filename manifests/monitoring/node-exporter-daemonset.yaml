@@ -13,9 +13,8 @@ spec:
     metadata:
       labels:
         app: node-exporter
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "9100"
+      # No prometheus.io annotations: scraped by the dedicated "node-exporter" job
+      # in prometheus-config.yaml (otherwise every metric would exist twice).
     spec:
       hostPID: true
       hostNetwork: true
