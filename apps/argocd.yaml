@@ -1,3 +1,6 @@
+# ArgoCD manages itself through the official Helm chart.
+# No automated sync on purpose: a broken change could take ArgoCD down,
+# so upgrades are synced by hand in the UI.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -18,6 +21,7 @@ spec:
             kubernetes.io/hostname: raspberrypi
         configs:
           params:
+            # Plain HTTP inside the cluster: HTTPS is handled by Cloudflare in front.
             server.insecure: true
         server:
           service:
@@ -27,4 +31,5 @@ spec:
     namespace: argocd
   syncPolicy:
     syncOptions:
+      # The ArgoCD CRDs are too large for a normal (client-side) apply.
       - ServerSideApply=true

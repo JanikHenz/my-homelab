@@ -1,3 +1,4 @@
+# One PersistentVolume + PersistentVolumeClaim per entry in values.yaml.
 {{- range .Values.volumes }}
 {{- $accessMode := .accessMode | default "ReadWriteOnce" }}
 ---
@@ -6,11 +7,17 @@ kind: PersistentVolume
 metadata:
   name: {{ .name }}-pv
 spec:
+  # Empty storage class = no automatic provisioning. The claim binds exactly
+  # to the volume named in volumeName.
   storageClassName: ""
   capacity:
     storage: {{ .size }}
   accessModes: [{{ $accessMode }}]
+  # Keep the data on disk even if the claim is deleted.
   persistentVolumeReclaimPolicy: Retain
+  # A folder directly on the node. hostPath is not bound to a node: the data
+  # is on whatever node the pod runs on, so every app pins itself to a node
+  # with a nodeSelector.
   hostPath:
     path: {{ .path | quote }}
     {{- with .hostPathType }}

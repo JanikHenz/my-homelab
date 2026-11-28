@@ -8,6 +8,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: prometheus
+# Read-only: find scrape targets and read the node and cAdvisor metrics.
 rules:
   - apiGroups: [""]
     resources:

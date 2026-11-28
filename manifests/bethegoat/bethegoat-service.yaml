@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bethegoat-service
+  namespace: bethegoat
+spec:
+  selector:
+    app: bethegoat
+  ports:
+    - port: 80
+      targetPort: http

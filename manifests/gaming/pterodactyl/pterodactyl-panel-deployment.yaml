@@ -18,6 +18,10 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      # Run one after the other before the panel starts:
+      # 1. wait until MariaDB accepts connections
+      # 2. create the storage folders and make them writable for php-fpm
+      #    (user 82 = www-data in the image)
       initContainers:
         - name: wait-for-db
           image: busybox:1.37.0
@@ -80,6 +84,8 @@ spec:
                 secretKeyRef:
                   name: pterodactyl-secrets
                   key: mariadb-password
+            # "array" = no file cache. A file cache created as root during startup
+            # could not be written by php-fpm later.
             - name: CACHE_DRIVER
               value: "array"
             - name: SESSION_DRIVER
@@ -88,6 +94,7 @@ spec:
               value: "sync"
             - name: MAIL_MAILER
               value: "log"
+            # Admin account that is created on the first start.
             - name: ADMIN_USER
               value: "admin"
             - name: ADMIN_PASS

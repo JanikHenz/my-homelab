@@ -4,6 +4,7 @@ metadata:
   name: qbittorrent-service
   namespace: media
 spec:
+  # Web UI, used by Radarr/Sonarr via qbittorrent-service:8080.
   selector:
     app: qbittorrent
   ports:

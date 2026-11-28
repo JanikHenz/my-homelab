@@ -22,6 +22,8 @@ spec:
         - name: radarr
           image: linuxserver/radarr:latest
           env:
+            # Same user/group (1000) in all apps that share the media disk, so they
+            # can read and move each other's files.
             - name: PUID
               value: "1000"
             - name: PGID
@@ -40,6 +42,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            # Same path (/media) as in qBittorrent: the finished download can be found
+            # under the same path and moved without copying.
             - name: media
               mountPath: /media
       volumes:

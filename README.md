@@ -44,6 +44,7 @@ Von aussen ist alles über **Cloudflare Zero Trust** erreichbar, im Cluster vert
 | Passwörter | `vaultwarden` | Vaultwarden | Raspberry Pi |
 | Gaming | `gaming` | Pterodactyl Panel (+ MariaDB), Wings | Homeserver |
 | Sync | `syncthing` | Syncthing (Obsidian-Vault) | Homeserver |
+| Lernen & Ziele | `bethegoat` | BeTheGoat Lern-Hub (eigenes Image) | Homeserver |
 | Startseite | `default` | Dashboard | Raspberry Pi |
 
 ### Hardware
@@ -97,7 +98,7 @@ ist die `root-app` (`kubectl apply -f bootstrap/root-app.yaml`) – sie verwalte
 | Application | Sync | Warum |
 | --- | --- | --- |
 | `root-app` | automatisch · prune · selfHeal | hält `apps/` aktuell |
-| 21 App-Applications | automatisch · prune · selfHeal | Git ist die Wahrheit. `spec.replicas` wird ignoriert, damit Skalieren übers Dashboard bestehen bleibt |
+| 22 App-Applications | automatisch · prune · selfHeal | Git ist die Wahrheit. `spec.replicas` wird ignoriert, damit Skalieren übers Dashboard bestehen bleibt |
 | `infrastructure` | **manuell, immer ohne Prune** | Speicher und Namespaces nie automatisch ändern |
 | `argocd` | **manuell** | ArgoCD verwaltet sich selbst – Änderungen erst nach Prüfung des Diffs |
 
@@ -107,7 +108,7 @@ ist die `root-app` (`kubectl apply -f bootstrap/root-app.yaml`) – sie verwalte
 | --- | --- | --- |
 | `infrastructure` | infrastructure | Namespace, PersistentVolume, RuntimeClass |
 | `platform` | argocd, argocd-ingress, dashboard, monitoring | ClusterRole, ClusterRoleBinding, CRDs |
-| `apps` | die übrigen 18 Apps | nichts – nur Ressourcen in den eigenen Namespaces |
+| `apps` | die übrigen 19 Apps | nichts – nur Ressourcen in den eigenen Namespaces |
 
 ### Neue App hinzufügen
 
@@ -193,6 +194,7 @@ Alle Metriken tragen das Label `cluster="homelab"` (wird von den Kubernetes-Dash
 | Nextcloud | Dateiablage | `nextcloud:35.0.2` + `mariadb:10.11` | Homeserver | `nextcloud.janikhenz.ch` | – |
 | Vaultwarden | Passwort-Manager (Bitwarden-kompatibel) | `vaultwarden/server:latest` | Raspberry Pi | `vault.janikhenz.ch` | – |
 | Syncthing | Sync des Obsidian-Vaults | `syncthing/syncthing:latest` | Homeserver | `syncthing.janikhenz.ch` | 30200, 30227 |
+| BeTheGoat | Lernplan, Zusammenfassungen, Ernährung, Tagesablauf | `ghcr.io/janikhenz/bethegoat:latest` (privat) | Homeserver | `bethegoat.janikhenz.ch` | – |
 
 ### Pterodactyl
 
@@ -292,6 +294,7 @@ Secrets liegen **nicht** im Repo. Sie werden einmalig von Hand angelegt (ArgoCD 
 | `librechat-secrets` | `jarvis` | `jwt-secret`, `jwt-refresh-secret`, `creds-key`, `creds-iv`, `meili-master-key` |
 | `pterodactyl-secrets` | `gaming` | `app-key`, `mariadb-root-password`, `mariadb-password`, `admin-password` |
 | `plex-claim` | `media` | `token` (von [plex.tv/claim](https://www.plex.tv/claim), nur 4 Minuten gültig) |
+| `ghcr-pull` | `bethegoat` | Pull-Secret für das private Image in GHCR (Typ `docker-registry`) |
 
 <details>
 <summary><b>Befehle zum Anlegen</b></summary>
@@ -321,6 +324,10 @@ kubectl create secret generic pterodactyl-secrets -n gaming \
 
 kubectl create secret generic plex-claim -n media \
   --from-literal=token="claim-XXXXXXXX"
+
+# GitHub → Settings → Developer settings → Personal access tokens (classic), nur Scope read:packages
+kubectl create secret docker-registry ghcr-pull -n bethegoat \
+  --docker-server=ghcr.io --docker-username=JanikHenz --docker-password="ghp_XXXXXXXX"
 ```
 
 > Datenbank-Passwörter nur bei der **ersten** Installation setzen – eine bestehende Datenbank
@@ -349,6 +356,7 @@ brauchen – der Grund steht jeweils als Kommentar im Service.
 | `radarr.janikhenz.ch` | Radarr | `vault.janikhenz.ch` | Vaultwarden |
 | `prowlarr.janikhenz.ch` | Prowlarr | `syncthing.janikhenz.ch` | Syncthing |
 | `qbt.janikhenz.ch` | qBittorrent | `pterodactyl.janikhenz.ch` · `wings.janikhenz.ch` | Pterodactyl |
+| `bethegoat.janikhenz.ch` | BeTheGoat | | |
 
 ### NodePorts (Homeserver `192.168.1.9`)
 
@@ -446,7 +454,7 @@ my-homelab/
 │   └── root-app.yaml            # App of Apps – einziges Objekt, das von Hand angelegt wird
 ├── apps/                        # verwaltet von der root-app
 │   ├── projects.yaml            # AppProjects: infrastructure, platform, apps
-│   ├── applicationset.yaml      # erzeugt die 21 App-Applications (Liste)
+│   ├── applicationset.yaml      # erzeugt die 22 App-Applications (Liste)
 │   ├── infrastructure.yaml      # Application für infrastructure/ (manueller Sync)
 │   └── argocd.yaml              # ArgoCD verwaltet sich selbst (manueller Sync)
 ├── infrastructure/              # Helm-Chart: clusterweite Ressourcen
@@ -462,6 +470,7 @@ my-homelab/
 │   ├── media-stack/             # flaresolverr, jellyfin, jellyseerr, plex, prowlarr, qbittorrent, radarr, sonarr
 │   ├── monitoring/
 │   ├── nextcloud/
+│   ├── bethegoat/               # Lern-Hub (Image aus dem Repo BeTheGoat)
 │   ├── pwd-manager/             # Vaultwarden
 │   └── syncthing/
 └── docs/                        # Doku-Website (rendert diese README) + Bilder

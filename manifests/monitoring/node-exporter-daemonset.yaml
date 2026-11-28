@@ -14,8 +14,11 @@ spec:
       labels:
         app: node-exporter
     spec:
+      # node-exporter has to see the real node (CPU, disks, network), not the
+      # container: host network, host processes and the host folders below.
       hostPID: true
       hostNetwork: true
+      # Run on every node, also on nodes with taints.
       tolerations:
         - effect: NoSchedule
           operator: Exists
@@ -24,6 +27,7 @@ spec:
       containers:
         - name: node-exporter
           image: prom/node-exporter:latest
+          # "$$" is how you write a literal "$" in Kubernetes args.
           args:
             - "--path.procfs=/host/proc"
             - "--path.sysfs=/host/sys"

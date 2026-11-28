@@ -4,6 +4,7 @@ metadata:
   name: qbittorrent-torrent-service
   namespace: media
 spec:
+  # NodePort 30008 (TCP + UDP) for incoming connections from other peers.
   type: NodePort
   selector:
     app: qbittorrent

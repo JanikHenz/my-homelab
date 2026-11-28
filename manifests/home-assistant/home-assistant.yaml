@@ -33,6 +33,8 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            # Only configuration.yaml comes from Git (ConfigMap). Everything else in
+            # /config (automations, integrations, ...) stays on the PVC.
             - name: configuration-yaml
               mountPath: /config/configuration.yaml
               subPath: configuration.yaml

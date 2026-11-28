@@ -4,6 +4,8 @@ metadata:
   name: grafana-provisioning
   namespace: monitoring
 data:
+  # Created automatically when Grafana starts. The dashboards refer to the
+  # datasource by its name "Prometheus" – do not rename it.
   datasources.yaml: |
     apiVersion: 1
     datasources:
@@ -15,6 +17,9 @@ data:
         isDefault: true
         editable: false
 
+  # Loads every dashboard JSON in /etc/grafana/dashboards (the
+  # grafana-dashboard-*.yaml ConfigMaps) into the folder "Homelab".
+  # Change dashboards in Git, not in the UI.
   dashboards.yaml: |
     apiVersion: 1
     providers:

@@ -4,6 +4,8 @@ metadata:
   name: pterodactyl-panel-service
   namespace: gaming
 spec:
+  # NodePort 30020: Wings runs with hostNetwork and reaches the panel via
+  # <node-ip>:30020.
   type: NodePort
   selector:
     app: pterodactyl-panel

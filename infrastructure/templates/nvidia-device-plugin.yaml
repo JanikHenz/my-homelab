@@ -1,3 +1,5 @@
+# Makes the GPU of the homeserver known to Kubernetes as "nvidia.com/gpu".
+# A pod gets a GPU with resources.limits: nvidia.com/gpu: "1".
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:

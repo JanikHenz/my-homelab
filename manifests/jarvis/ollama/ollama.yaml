@@ -18,6 +18,8 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      # GPU access: toleration + runtimeClassName nvidia + nvidia.com/gpu in limits.
+      # The GPU is time-sliced, so this uses one of 4 slots.
       tolerations:
         - key: nvidia.com/gpu
           operator: Exists

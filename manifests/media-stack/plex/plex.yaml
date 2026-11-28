@@ -31,6 +31,8 @@ spec:
               cpu: 3000m
               memory: 6Gi
           env:
+            # Links the server to the Plex account. Only used on the very first start;
+            # a new token (plex.tv/claim) is valid for 4 minutes.
             - name: PLEX_CLAIM
               valueFrom:
                 secretKeyRef:

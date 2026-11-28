@@ -4,6 +4,8 @@ metadata:
   name: plex-service
   namespace: media
 spec:
+  # NodePort 30002: reachable in the LAN via <node-ip>:30002 (TVs, apps),
+  # also when the internet or the Cloudflare tunnel is down.
   type: NodePort
   selector:
     app: plex

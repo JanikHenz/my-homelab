@@ -80,6 +80,7 @@ data:
             regex: node-exporter
           - source_labels: [__meta_kubernetes_pod_node_name]
             target_label: node
+          # Scrape port 9100 on the pod IP (hostNetwork: pod IP = node IP).
           - source_labels: [__address__]
             action: replace
             regex: ([^:]+):.*
@@ -106,6 +107,8 @@ data:
           - target_label: cluster
             replacement: homelab
 
+      # Scrapes every pod with the annotation prometheus.io/scrape: "true"
+      # (port and path from prometheus.io/port and prometheus.io/path).
       - job_name: kubernetes-pods
         kubernetes_sd_configs:
           - role: pod

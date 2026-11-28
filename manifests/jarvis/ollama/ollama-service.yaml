@@ -4,6 +4,7 @@ metadata:
   name: ollama-service
   namespace: jarvis
 spec:
+  # NodePort 30013: Home Assistant connects to Ollama via <node-ip>:30013.
   type: NodePort
   selector:
     app: ollama

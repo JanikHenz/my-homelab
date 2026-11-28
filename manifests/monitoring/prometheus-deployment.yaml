@@ -19,13 +19,14 @@ spec:
         # sha256 (first 12 chars) of prometheus.yml in prometheus-config.yaml.
         # Prometheus does not reload its config by itself – update this value
         # whenever the config changes, so ArgoCD restarts the pod.
-        checksum/config: "ddc1a72a797e"
+        checksum/config: "fcd39f37453d"
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
       serviceAccountName: prometheus
       securityContext:
         fsGroup: 65534
+      # Prometheus runs as user 65534 (nobody): make it the owner of its data folder.
       initContainers:
         - name: fix-permissions
           image: busybox:1.37.0

@@ -20,6 +20,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: jellyseerr
+          # Jellyseerr was merged into "Seerr", hence the new image name.
           image: ghcr.io/seerr-team/seerr:latest
           securityContext:
             runAsUser: 1000

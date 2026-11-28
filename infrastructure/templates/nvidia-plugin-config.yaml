@@ -4,6 +4,9 @@ metadata:
   name: nvidia-plugin-configs
   namespace: kube-system
 data:
+  # Time-slicing: the one physical GPU is offered as 4 GPUs, so up to 4 pods
+  # can use it at the same time. There is no memory isolation: all of them
+  # share the 6 GB of VRAM.
   config.yaml: |
     version: v1
     flags:

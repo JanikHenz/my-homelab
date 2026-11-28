@@ -20,6 +20,7 @@ spec:
       containers:
         - name: dashboard
           image: ghcr.io/janikhenz/dashboard2:latest
+          # The image uses the "latest" tag: pull it on every start to get updates.
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

@@ -16,6 +16,7 @@ spec:
       labels:
         app: vaultwarden
     spec:
+      # Must stay on the Pi: its data folder (hostPath) is on the Pi's disk.
       nodeSelector:
         kubernetes.io/hostname: raspberrypi
       containers:

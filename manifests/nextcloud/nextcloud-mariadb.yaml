@@ -21,6 +21,7 @@ spec:
       containers:
         - name: mariadb
           image: mariadb:10.11
+          # Settings recommended by Nextcloud for MariaDB.
           args:
             - "--transaction-isolation=READ-COMMITTED"
             - "--log-bin=OFF"

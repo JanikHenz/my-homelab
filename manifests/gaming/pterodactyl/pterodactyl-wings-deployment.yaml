@@ -18,6 +18,8 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      # Game servers open their ports directly on the homeserver; Wings manages
+      # these ports itself, so it uses the network of the host.
       hostNetwork: true
       containers:
         - name: wings
@@ -36,6 +38,8 @@ spec:
               name: wings-api
               protocol: TCP
           securityContext:
+            # Wings starts every game server as a Docker container on the host
+            # (via docker.sock), which needs full privileges.
             privileged: true
           resources:
             requests:
@@ -44,6 +48,8 @@ spec:
             limits:
               cpu: 2000m
               memory: 2Gi
+          # Same paths as on the host: Wings passes these paths to Docker, and Docker
+          # looks them up on the host, not in this container.
           volumeMounts:
             - name: config
               mountPath: /etc/pterodactyl

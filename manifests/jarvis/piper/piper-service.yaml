@@ -4,6 +4,8 @@ metadata:
   name: piper-service
   namespace: jarvis
 spec:
+  # NodePort 30015: Home Assistant connects to Piper (text-to-speech) via
+  # <node-ip>:30015.
   type: NodePort
   selector:
     app: piper

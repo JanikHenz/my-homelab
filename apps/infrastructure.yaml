@@ -1,3 +1,6 @@
+# Cluster-wide resources (namespaces, storage, GPU plugin), see infrastructure/.
+# No automated sync on purpose: these resources hold all the data, so check
+# the diff in ArgoCD first and sync by hand.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

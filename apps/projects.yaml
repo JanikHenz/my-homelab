@@ -1,9 +1,13 @@
+# AppProjects limit what an Application may deploy and where.
+# Example: an app in "apps" cannot create cluster-wide resources and cannot
+# deploy into the argocd namespace. A new namespace must be added here too.
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: infrastructure
   namespace: argocd
   annotations:
+    # Create the projects before the Applications that use them.
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   description: Cluster-wide resources (namespaces, storage, NVIDIA device plugin)
@@ -12,6 +16,7 @@ spec:
   destinations:
     - name: homelab
       namespace: "*"
+  # Cluster-wide (not namespaced) resource kinds this project may create.
   clusterResourceWhitelist:
     - { group: "", kind: Namespace }
     - { group: "", kind: PersistentVolume }
@@ -57,3 +62,4 @@ spec:
     - { name: homelab, namespace: vaultwarden }
     - { name: homelab, namespace: gaming }
     - { name: homelab, namespace: syncthing }
+    - { name: homelab, namespace: bethegoat }

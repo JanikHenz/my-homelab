@@ -8,6 +8,8 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: dashboard-deployments-manager
+# The dashboard can start/stop apps (scale them), so it needs patch/update
+# on deployments and statefulsets. Everything else is read-only.
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments", "statefulsets"]

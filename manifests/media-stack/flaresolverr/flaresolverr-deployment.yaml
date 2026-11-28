@@ -1,3 +1,5 @@
+# Solves Cloudflare challenges of some indexer sites for Prowlarr
+# (Prowlarr uses http://flaresolverr-service:8191).
 apiVersion: apps/v1
 kind: Deployment
 metadata:

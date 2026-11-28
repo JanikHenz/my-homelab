@@ -18,6 +18,8 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: homeserver
+      # GPU for hardware transcoding: toleration + runtimeClassName nvidia +
+      # nvidia.com/gpu in limits (one of the 4 time-sliced slots).
       tolerations:
         - key: nvidia.com/gpu
           operator: Exists

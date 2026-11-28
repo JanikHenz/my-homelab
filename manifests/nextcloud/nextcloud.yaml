@@ -24,6 +24,9 @@ spec:
           ports:
             - containerPort: 80
           env:
+            # Nextcloud only sees plain HTTP from Traefik. These variables tell it the
+            # public URL (https://nextcloud.janikhenz.ch) so links and redirects work.
+            # TRUSTED_PROXIES: pod, service and LAN networks.
             - name: OVERWRITEPROTOCOL
               value: "https"
             - name: OVERWRITECLIURL

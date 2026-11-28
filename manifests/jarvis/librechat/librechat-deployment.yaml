@@ -20,6 +20,8 @@ spec:
         kubernetes.io/hostname: homeserver
       securityContext:
         fsGroup: 1000
+      # Before LibreChat starts: fix the folder permissions, then wait until
+      # MongoDB and Meilisearch are reachable.
       initContainers:
         - name: fix-permissions
           image: busybox:1.37.0
@@ -80,6 +82,8 @@ spec:
               value: "https://chat.janikhenz.ch"
             - name: DOMAIN_SERVER
               value: "https://chat.janikhenz.ch"
+            # Requests come in through Cloudflare + Traefik: trust the proxy so the
+            # real client IP is used.
             - name: TRUST_PROXY
               value: "1"
             - name: ALLOW_REGISTRATION
@@ -124,6 +128,7 @@ spec:
             - name: config
               mountPath: /app/librechat.yaml
               subPath: librechat.yaml
+            # One PVC, split into three folders with subPath.
             - name: data
               mountPath: /app/uploads
               subPath: uploads

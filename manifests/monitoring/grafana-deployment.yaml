@@ -20,6 +20,7 @@ spec:
         kubernetes.io/hostname: homeserver
       securityContext:
         fsGroup: 472
+      # Grafana runs as user 472: make it the owner of its data folder.
       initContainers:
         - name: fix-permissions
           image: busybox:1.37.0
@@ -38,6 +39,9 @@ spec:
           env:
             - name: GF_SERVER_ROOT_URL
               value: "https://grafana.janikhenz.ch"
+            # Only used on the very first start (empty database). Changing the secret
+            # later does not change the password, use
+            # "grafana cli admin reset-admin-password" in the pod instead.
             - name: GF_SECURITY_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:

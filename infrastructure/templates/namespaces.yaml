@@ -5,5 +5,7 @@ kind: Namespace
 metadata:
   name: {{ . }}
   annotations:
+    # Never let ArgoCD delete a namespace: that would delete everything in it,
+    # including the secrets, which are not stored in Git.
     argocd.argoproj.io/sync-options: Delete=false,Prune=false
 {{- end }}

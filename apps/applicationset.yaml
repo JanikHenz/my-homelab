@@ -1,3 +1,5 @@
+# Creates one ArgoCD Application per entry in the list below.
+# New app: add an entry (name, project, path, namespace) – nothing else needed.
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -7,6 +9,8 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   syncPolicy:
+    # If an entry is removed from the list, only the Application is deleted.
+    # The running resources stay in the cluster (safety net against typos).
     preserveResourcesOnDeletion: true
   generators:
     - list:
@@ -52,6 +56,12 @@ spec:
               project: apps,
               path: manifests/syncthing,
               namespace: syncthing,
+            }
+          - {
+              name: bethegoat,
+              project: apps,
+              path: manifests/bethegoat,
+              namespace: bethegoat,
             }
           - {
               name: pterodactyl,
@@ -150,6 +160,8 @@ spec:
       destination:
         name: homelab
         namespace: "{{ .namespace }}"
+      # Replicas are sometimes changed by hand (e.g. app stopped via the dashboard).
+      # ArgoCD should not see that as a difference and scale the app back up.
       ignoreDifferences:
         - group: apps
           kind: Deployment
@@ -158,8 +170,12 @@ spec:
           kind: StatefulSet
           jsonPointers: [/spec/replicas]
       syncPolicy:
+        # Git is the source of truth: changes in Git are applied automatically,
+        # manual changes in the cluster are reverted (selfHeal) and resources
+        # removed from Git are removed from the cluster (prune).
         automated:
           prune: true
           selfHeal: true
+        # Needed so that a sync also leaves the replicas (see above) alone.
         syncOptions:
           - RespectIgnoreDifferences=true

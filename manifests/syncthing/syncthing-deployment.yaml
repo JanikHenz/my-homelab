@@ -28,6 +28,7 @@ spec:
               value: "1000"
             - name: TZ
               value: "Europe/Zurich"
+            # Listen on all interfaces, otherwise the web UI only works inside the pod.
             - name: STGUIADDRESS
               value: "0.0.0.0:8384"
           ports:

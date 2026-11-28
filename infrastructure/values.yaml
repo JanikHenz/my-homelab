@@ -1,3 +1,5 @@
+# Namespaces created by this chart. A new namespace must also be added to
+# the matching AppProject in apps/projects.yaml.
 namespaces:
   - media
   - monitoring
@@ -7,7 +9,11 @@ namespaces:
   - vaultwarden
   - gaming
   - syncthing
+  - bethegoat
 
+# Each entry creates one PersistentVolume + PersistentVolumeClaim, see
+# templates/storage.yaml. The app uses the claim "<name>-pvc".
+# Optional: accessMode (default ReadWriteOnce), hostPathType.
 volumes:
   - {
       name: jellyfin-config,
@@ -51,6 +57,7 @@ volumes:
       size: 5Gi,
       path: /mnt/data/jellyseerr/config,
     }
+  # Shared by Jellyfin, Plex, Radarr, Sonarr and qBittorrent (ReadWriteMany).
   - {
       name: global-media,
       namespace: media,
@@ -109,6 +116,7 @@ volumes:
       path: /mnt/data/nextcloud/database,
       hostPathType: DirectoryOrCreate,
     }
+  # This folder is on the Raspberry Pi, because Vaultwarden runs there.
   - {
       name: vaultwarden-data,
       namespace: vaultwarden,

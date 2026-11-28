@@ -4,6 +4,8 @@ metadata:
   name: home-assistant-service
   namespace: home-assistant
 spec:
+  # NodePort 30009: reachable in the LAN via <node-ip>:30009, also when the
+  # internet or the Cloudflare tunnel is down.
   type: NodePort
   selector:
     app: home-assistant

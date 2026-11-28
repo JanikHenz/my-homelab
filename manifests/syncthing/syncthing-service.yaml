@@ -16,6 +16,8 @@ metadata:
   name: syncthing-sync
   namespace: syncthing
 spec:
+  # NodePorts for the sync traffic (30200) and local discovery (30227).
+  # Devices in the LAN connect to <node-ip>:30200.
   type: NodePort
   selector:
     app: syncthing

@@ -4,6 +4,8 @@ metadata:
   name: whisper-service
   namespace: jarvis
 spec:
+  # NodePort 30014: Home Assistant connects to Whisper (speech-to-text) via
+  # <node-ip>:30014.
   type: NodePort
   selector:
     app: whisper

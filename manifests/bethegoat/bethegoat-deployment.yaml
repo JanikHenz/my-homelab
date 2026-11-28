@@ -1,0 +1,76 @@
+# BeTheGoat Lern-Hub (statische Web-App, Repo JanikHenz/BeTheGoat).
+# GitHub Actions baut bei jedem Push auf main ghcr.io/janikhenz/bethegoat:latest (+ :sha-<commit>).
+# Neues Image ausrollen: Deployment neu starten (Argo CD → Restart oder kubectl rollout restart).
+# Zurückrollen: hier einen :sha-<commit>-Tag eintragen und pushen.
+# Kein Speicher nötig: Fortschritt liegt im Browser (localStorage).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bethegoat
+  namespace: bethegoat
+  labels:
+    app: bethegoat
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: bethegoat
+  template:
+    metadata:
+      labels:
+        app: bethegoat
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: homeserver
+      # Das Package in GHCR ist privat → Pull-Secret (anlegen siehe README, Abschnitt Secrets).
+      imagePullSecrets:
+        - name: ghcr-pull
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: bethegoat
+          image: ghcr.io/janikhenz/bethegoat:latest
+          # "latest" ändert sich mit jedem Build → bei jedem Start neu ziehen
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 200m
+              memory: 64Mi
+          # nginx braucht beschreibbare Ordner für PID und Cache (Root-Dateisystem ist read-only)
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: nginx-cache
+          emptyDir: {}
